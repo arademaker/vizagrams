@@ -20,22 +20,31 @@ instance : Monoid Nat :=
   id_right := Nat.add_zero -- Propriedade: a + ε  = a
 }
 
+-- draw of a simple circle
 inductive Prim
 | circle : Nat → Prim
 
 structure Diagram :=
   (prims : List Prim)
 
-def prim_to_svg : Prim → String
-| Prim.circle r => "<circle cx= \"50\" cy=\"50\" r=\"" ++ toString r ++ "\" fill=\"blue\" />"
+-- Função que converte primitivos em SVG, levando em conta padding e cor
+def prim_to_svg (pad : Nat) (color : String) : Prim → String
+| Prim.circle r =>
+    let adjusted_cx := toString (50 + pad)
+    let adjusted_cy := toString (50 + pad)
+    "<circle cx=\"" ++ adjusted_cx ++ "\" cy=\"" ++ adjusted_cy ++ "\" r=\"" ++ toString r ++ "\" fill=\"" ++ color ++ "\" />"
 
-def diagram_to_svg (d : Diagram) : String :=
-  let header := "<svg width=\"100\" height=\"100\" xmlns=\"http://www.w3.org/2000/svg\">"
+-- Função que converte um Diagrama em SVG, com parâmetros height, pad e color
+def draw (d : Diagram) (height : Nat := 100) (pad : Nat := 0) (color : String := "blue") : String :=
+  let header := "<svg width=\"" ++ toString height ++ "\" height=\"" ++ toString height ++ "\" xmlns=\"http://www.w3.org/2000/svg\">"
   let footer := "</svg>"
-  let body := String.join (d.prims.map prim_to_svg)
+  let body := String.join (d.prims.map (prim_to_svg pad color))
   header ++ body ++ footer
 
-def example_diagram : Diagram :=
-  { prims := [Prim.circle 30] }
+def Circle (r : Nat := 50) : Diagram :=
+  { prims := [Prim.circle r] }
 
-#eval diagram_to_svg example_diagram
+def main : IO Unit :=
+  IO.println (draw Circle (height := 100) (pad:=20) (color:="red"))
+
+#eval main
