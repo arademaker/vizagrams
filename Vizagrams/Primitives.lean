@@ -20,31 +20,44 @@ instance : Monoid Nat :=
   id_right := Nat.add_zero -- Propriedade: a + ε  = a
 }
 
--- draw of a simple circle
+
+structure Circle where
+  radius : Nat -- Raio
+  center : Nat × Nat -- Centro (x, y)
+
+structure Square where
+  side : Nat -- Lado
+  center : Nat × Nat -- Ponto Inicial (x, y)
+
+structure Line where
+  startline : Nat × Nat -- Ponto inicial (x1, y1)
+  endline : Nat × Nat -- Ponto final (x2, y2)
+  stroke : String -- Basicamente a cor
+  strokeWidth : Nat -- Quão forte é a linha
+
 inductive Prim
-| circle : Nat → Prim
+  | circle : Circle → Prim
+  | square : Square → Prim
+  | line : Line → Prim
 
-structure Diagram :=
-  (prims : List Prim)
+def Diagram := List Prim
 
--- Função que converte primitivos em SVG, levando em conta padding e cor
-def prim_to_svg (pad : Nat) (color : String) : Prim → String
-| Prim.circle r =>
-    let adjusted_cx := toString (50 + pad)
-    let adjusted_cy := toString (50 + pad)
-    "<circle cx=\"" ++ adjusted_cx ++ "\" cy=\"" ++ adjusted_cy ++ "\" r=\"" ++ toString r ++ "\" fill=\"" ++ color ++ "\" />"
+-- Função para gerar SVG de primitivas
+def drawPrim : Prim → String
+  | Prim.circle c => s!"<circle cx='{c.center.1}' cy='{c.center.2}' r='{c.radius}' />"
+  | Prim.square s => s!"<rect x='{s.center.1 - s.side / 2}' y='{s.center.2 - s.side / 2}' width='{s.side}' height='{s.side}' />"
+  | Prim.line l => s!"<line x1='{l.startline.1}' y1='{l.startline.2}' x2='{l.endline.1}' y2='{l.endline.2}' stroke='{l.stroke}' stroke-width='{l.strokeWidth}' />"
 
--- Função que converte um Diagrama em SVG, com parâmetros height, pad e color
-def draw (d : Diagram) (height : Nat := 100) (pad : Nat := 0) (color : String := "blue") : String :=
-  let header := "<svg width=\"" ++ toString height ++ "\" height=\"" ++ toString height ++ "\" xmlns=\"http://www.w3.org/2000/svg\">"
-  let footer := "</svg>"
-  let body := String.join (d.prims.map (prim_to_svg pad color))
-  header ++ body ++ footer
+-- Função que desenha a lista de primitivas em ordem inversa
+def draw (diagram : Diagram) : String :=
+  let primitives := diagram.reverse.map drawPrim
+  let svgContent := String.intercalate "\n" primitives
+  s!"<svg xmlns='http://www.w3.org/2000/svg' version='1.1'>\n{svgContent}\n</svg>"
 
-def Circle (r : Nat := 50) : Diagram :=
-  { prims := [Prim.circle r] }
+def myDiagram : Diagram := [
+  Prim.circle ⟨50, (100, 100)⟩,  -- Círculo com raio 50 e centro em (100, 100)
+  Prim.square ⟨40, (120, 120)⟩,  -- Quadrado com lado 40 e centro em (120, 120)
+  Prim.line ⟨(50, 50), (150, 150) , "orange" , 5 ⟩  -- Linha de (50, 50) até (150, 150)
+]
 
-def main : IO Unit :=
-  IO.println (draw Circle (height := 100) (pad:=20) (color:="red"))
-
-#eval main
+#eval draw myDiagram
