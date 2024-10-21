@@ -29,19 +29,19 @@ deriving Repr
 
 structure rectangle (α : Type) where
  origin : (α × α)
- a : α
- b : α
-deriving Repr
-
-structure line (α : Type) where
-  start : (α × α)
-  end_ : (α × α)
+ width : α
+ height : α
 deriving Repr
 
 structure ellipse (α : Type) where
   center : (α × α)
   rx : α
   ry : α
+deriving Repr
+
+structure line (α : Type) where
+  starting : (α × α)
+  ending : (α × α)
 deriving Repr
 
 structure polyline (α : Type) where
