@@ -1,3 +1,4 @@
+
 /-
 Monoide:
 Um conjunto Ω munido de uma operação ◆ e um elemento ε que satisfazem:
@@ -20,6 +21,7 @@ instance : Monoid Nat :=
   id_right := Nat.add_zero -- Propriedade: a + ε  = a
 }
 -/
+
 namespace Primitive
 
 structure circle (α : Type) where
@@ -51,9 +53,11 @@ deriving Repr
 structure polygon (α : Type) where
   points : List (α × α)
 deriving Repr
+
 /-
 structure path (α : Type) where
   d : String  -- Definição do caminho como string de comandos SVG
 deriving Repr
 -/
+
 end Primitive

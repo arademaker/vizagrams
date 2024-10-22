@@ -32,5 +32,4 @@ instance : Primitive (polygon Nat) where
     let points_str := String.intercalate " " (p.points.map (λ (x, y) => s!"{x},{y}"))
     s!"<svg><polygon points='{points_str}' fill='none' stroke='black' />-</svg>"
 
-
 end SVG

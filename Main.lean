@@ -12,3 +12,4 @@ def test6 := (Primitive.polygon.mk [(0,100), (50,25), (50,75), (100,0)])
 #eval SVG.Primitive.draw test4
 #eval SVG.Primitive.draw test5
 #eval SVG.Primitive.draw test6
+
