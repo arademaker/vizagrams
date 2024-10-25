@@ -54,6 +54,19 @@ structure polygon (α : Type) where
   points : List (α × α)
 deriving Repr
 
+structure QBezier ( α : Type ) where
+  basePoints : List (α × α)
+  controlPoints : List (α × α)
+  -- Verificar se len(basepoints < controlPoints) e se len(basePoints ≥ 2)
+deriving Repr
+
+structure Style where
+  stroke : String
+  strokeWidth : Nat
+  fill : String
+  opacity : Float
+  deriving Repr
+
 /-
 structure path (α : Type) where
   d : String  -- Definição do caminho como string de comandos SVG
