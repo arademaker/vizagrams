@@ -29,6 +29,8 @@ structure circle (α : Type) where
  radious : α
 deriving Repr
 
+
+
 structure rectangle (α : Type) where
  origin : (α × α)
  width : α

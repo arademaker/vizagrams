@@ -1,4 +1,8 @@
 import Vizagrams.Primitives
+import Lean.Data.Xml
+import Lean.Data.RBMap
+
+open Lean Xml
 
 namespace SVG
 open Primitive
