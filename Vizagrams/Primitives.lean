@@ -1,26 +1,4 @@
 
-/-
-Monoide:
-Um conjunto Ω munido de uma operação ◆ e um elemento ε que satisfazem:
-. x ◆ ε = ε ◆ x = x
-. x ◆ y ◆ z = (x ◆ y) ◆ z
-
-class Monoid (α : Type) :=
-  ( op : α → α → α)  -- Operação binária
-  ( ε : α)          -- Elemento neutro
-  (assoc : ∀ a b c : α, op (op a b) c = op a (op b c))  -- Propriedade associativa
-  (id_left : ∀ a : α, op ε a = a)                     -- Elemento neutro à esquerda
-  (id_right : ∀ a : α, op a ε  = a)                    -- Elemento neutro à direita
-
-instance : Monoid Nat :=
-{
-  op := Nat.add,  -- A operação será a adição
-  ε  := 0,        -- O elemento neutro será o zero
-  assoc := Nat.add_assoc,  -- Usamos a associatividade da adição de naturais
-  id_left := Nat.zero_add, -- Propriedade: ε + a = a
-  id_right := Nat.add_zero -- Propriedade: a + ε  = a
-}
--/
 
 namespace Primitive
 
@@ -28,7 +6,20 @@ structure circle (α : Type) where
  center : (α × α)
  radious : α
 deriving Repr
+-- Função para calcular o comprimento de um vetor
+def magnitude (v : Float × Float) : Float :=
+  Float.sqrt (v.1 * v.1 + v.2 * v.2)
 
+-- Função para normalizar um vetor
+def normalize (v : Float × Float) : Float × Float :=
+  let mag := magnitude v
+  (v.1 / mag, v.2 / mag)
+
+-- Função envelope para o círculo
+def envelope_circle (c : circle Float) (v : Float × Float) : Float :=
+  let v_norm := normalize v
+  let p := (c.center.1 + c.radious * v_norm.1, c.center.2 + c.radious * v_norm.2)
+  p.1 * v_norm.1 + p.2 * v_norm.2  -- Produto escalar para projeção
 
 
 structure rectangle (α : Type) where
@@ -36,6 +27,17 @@ structure rectangle (α : Type) where
  width : α
  height : α
 deriving Repr
+
+-- Função envelope para o retângulo
+def envelope_rectangle (r : rectangle Float) (v : Float × Float) : Float :=
+  let v_norm := normalize v
+  let corners := [
+    (r.origin.1, r.origin.2),  -- canto inferior esquerdo
+    (r.origin.1 + r.width, r.origin.2),  -- canto inferior direito
+    (r.origin.1, r.origin.2 + r.height),  -- canto superior esquerdo
+    (r.origin.1 + r.width, r.origin.2 + r.height)  -- canto superior direito
+  ]
+  corners.map (λ p => p.1 * v_norm.1 + p.2 * v_norm.2) |>.foldl max corners.head!.1  -- Projeta cada canto e retorna o máximo
 
 structure ellipse (α : Type) where
   center : (α × α)
