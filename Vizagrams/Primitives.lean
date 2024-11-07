@@ -6,14 +6,22 @@ structure circle (α : Type) where
  center : (α × α)
  radious : α
 deriving Repr
+
 -- Função para calcular o comprimento de um vetor
 def magnitude (v : Float × Float) : Float :=
-  Float.sqrt (v.1 * v.1 + v.2 * v.2)
+  Float.sqrt (v.1 * v.1 + v.2 * v.2) -- ⟨ v , v ⟩  ou vᵀv ou ‖v‖
+
+def vector_v := ( (3 : Float ), (4 : Float))
+#eval magnitude ( vector_v )
 
 -- Função para normalizar um vetor
 def normalize (v : Float × Float) : Float × Float :=
   let mag := magnitude v
-  (v.1 / mag, v.2 / mag)
+  (v.1 / mag, v.2 / mag) -- v/‖v‖
+
+#eval normalize vector_v
+def v_unit := normalize vector_v
+#eval magnitude v_unit
 
 -- Função envelope para o círculo
 def envelope_circle (c : circle Float) (v : Float × Float) : Float :=
@@ -21,6 +29,8 @@ def envelope_circle (c : circle Float) (v : Float × Float) : Float :=
   let p := (c.center.1 + c.radious * v_norm.1, c.center.2 + c.radious * v_norm.2)
   p.1 * v_norm.1 + p.2 * v_norm.2  -- Produto escalar para projeção
 
+def Circle_1 : circle Float := { center := (4, 3), radious := 5.0 }
+#eval envelope_circle Circle_1 (12,15)
 
 structure rectangle (α : Type) where
  origin : (α × α)
