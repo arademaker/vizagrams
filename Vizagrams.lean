@@ -4,3 +4,4 @@
 import Vizagrams.Basic
 import Vizagrams.Backends
 import Vizagrams.Primitives
+import Vizagrams.BackendsLean.svgbackend

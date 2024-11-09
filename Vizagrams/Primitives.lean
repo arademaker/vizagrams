@@ -1,12 +1,4 @@
 
-
-namespace Primitive
-
-structure circle (α : Type) where
- center : (α × α)
- radious : α
-deriving Repr
-
 -- Função para calcular o comprimento de um vetor
 def magnitude (v : Float × Float) : Float :=
   Float.sqrt (v.1 * v.1 + v.2 * v.2) -- ⟨ v , v ⟩  ou vᵀv ou ‖v‖
@@ -19,18 +11,17 @@ def normalize (v : Float × Float) : Float × Float :=
   let mag := magnitude v
   (v.1 / mag, v.2 / mag) -- v/‖v‖
 
-#eval normalize vector_v
-def v_unit := normalize vector_v
-#eval magnitude v_unit
+namespace Primitive
 
--- Função envelope para o círculo
+structure circle (α : Type) where
+ center : (α × α)
+ radious : α
+deriving Repr
+
 def envelope_circle (c : circle Float) (v : Float × Float) : Float :=
   let v_norm := normalize v
   let p := (c.center.1 + c.radious * v_norm.1, c.center.2 + c.radious * v_norm.2)
   p.1 * v_norm.1 + p.2 * v_norm.2  -- Produto escalar para projeção
-
-def Circle_1 : circle Float := { center := (4, 3), radious := 5.0 }
-#eval envelope_circle Circle_1 (12,15)
 
 structure rectangle (α : Type) where
  origin : (α × α)
@@ -38,7 +29,6 @@ structure rectangle (α : Type) where
  height : α
 deriving Repr
 
--- Função envelope para o retângulo
 def envelope_rectangle (r : rectangle Float) (v : Float × Float) : Float :=
   let v_norm := normalize v
   let corners := [
@@ -48,6 +38,7 @@ def envelope_rectangle (r : rectangle Float) (v : Float × Float) : Float :=
     (r.origin.1 + r.width, r.origin.2 + r.height)  -- canto superior direito
   ]
   corners.map (λ p => p.1 * v_norm.1 + p.2 * v_norm.2) |>.foldl max corners.head!.1  -- Projeta cada canto e retorna o máximo
+
 
 structure ellipse (α : Type) where
   center : (α × α)
