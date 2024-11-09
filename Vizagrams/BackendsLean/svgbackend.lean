@@ -11,13 +11,14 @@ def placeCircleNextTo (c1 : circle Float) (c2 : circle Float) (direction : Float
   let new_center := (c1.center.1 + v_norm.1 * distance, c1.center.2 + v_norm.2 * distance)
   { c2 with center := new_center }
 
-
+-- Inacabado
 def placeRectangleNextToCircle (c : circle Float) (r : rectangle Float) (direction : Float × Float) : rectangle Float :=
   let v_norm := normalize direction  -- Normalizar a direção
   let distance := c.radious + envelope_rectangle r (-v_norm.1, -v_norm.2)  -- Soma da distância do círculo e do envelope oposto do retângulo
   let new_origin := (c.center.1 + v_norm.1 * distance, c.center.2 + v_norm.2 * distance - r.height / 2)
   { r with origin := new_origin }
 
+-- Classe que retorna xml elementos
 class PrimToSvg (α : Type) where
   primToSvg : α → Lean.Xml.Element
 
@@ -81,10 +82,3 @@ instance : PrimToSvg (polygon Nat) where
         ("points", String.intercalate " " (p.points.map (λ (x, y) => s!"{x},{y}")))
       ] compare)
     #[]
-
-
-def combineSvgElements (elements : List Lean.Xml.Element) : Lean.Xml.Element :=
-  let contents : Array Content := elements.map Content.Element |>.toArray
-  Lean.Xml.Element.Element "svg"
-    (RBMap.fromList [("xmlns", "http://www.w3.org/2000/svg"), ("width", "200"), ("height", "100")] compare)
-    contents
