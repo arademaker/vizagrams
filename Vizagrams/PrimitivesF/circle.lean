@@ -28,3 +28,7 @@ instance : LinearTransform ( CircleByDiameter Float ) where
   let new_p₂ := ( c.p₂.1 + v.1 , c.p₂.2 + v.2 )
   {c with p₁ := new_p₁ , p₂ := new_p₂}
   rotation (c : CircleByDiameter Float ) ( θ : Float) := c -- A trabalhar
+
+def getRadius (c : CircleByDiameter Float) : Float :=
+  let diameter := norma ( c.p₂.1 - c.p₁.1 , c.p₂.2 - c.p₁.2 )
+  diameter/2
