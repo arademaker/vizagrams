@@ -82,3 +82,28 @@ instance : PrimToSvg (polygon Nat) where
         ("points", String.intercalate " " (p.points.map (λ (x, y) => s!"{x},{y}")))
       ] compare)
     #[]
+
+def svgFromElements (elements : List Lean.Xml.Element) : Lean.Xml.Element :=
+  Lean.Xml.Element.Element "svg"
+    (RBMap.fromList
+      [("xmlns", "http://www.w3.org/2000/svg"),
+       ("width", "200"),
+       ("height", "100")] compare)
+    (elements.map Content.Element).toArray
+
+def circles : List (circle Float) :=
+  [
+    ⟨(50.0, 50.0), 25.0⟩,
+    ⟨(100.0, 100.0), 30.0⟩,
+    ⟨(150.0, 50.0), 20.0⟩
+  ]
+
+-- Converter círculos para elementos SVG usando `PrimToSvg`
+def circleElements : List Lean.Xml.Element :=
+  circles.map PrimToSvg.primToSvg
+
+-- Criar o SVG contendo os círculos
+def svgExample : Lean.Xml.Element :=
+  svgFromElements circleElements
+
+#eval svgExample
