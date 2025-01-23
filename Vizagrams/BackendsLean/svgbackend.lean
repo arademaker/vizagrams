@@ -1,5 +1,5 @@
 import Lean.Data.Xml
-import Vizagrams.Primitives -- Assumindo que este módulo contém suas estruturas de primitivas
+import Vizagrams.Primitives1 -- Assumindo que este módulo contém suas estruturas de primitivas
 
 open Lean Xml
 open Primitive

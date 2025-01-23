@@ -1,6 +1,9 @@
 import Lake
 open Lake DSL
 
+require scilean from git
+  "https://github.com/lecopivo/SciLean.git"
+
 package "vizagrams" where
   -- add package configuration options here
 

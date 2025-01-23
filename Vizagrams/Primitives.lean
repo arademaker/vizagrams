@@ -1,81 +1,135 @@
+import SciLean
+import ProofWidgets.Data.Svg
+import ProofWidgets.Component.HtmlDisplay
 
--- Função para calcular o comprimento de um vetor
-def magnitude (v : Float × Float) : Float :=
-  Float.sqrt (v.1 * v.1 + v.2 * v.2) -- ⟨ v , v ⟩  ou vᵀv ou ‖v‖
+set_option autoImplicit true
+set_default_scalar Float
 
-def vector_v := ( (3 : Float ), (4 : Float))
-#eval magnitude ( vector_v )
+namespace Primitives
 
--- Função para normalizar um vetor
-def normalize (v : Float × Float) : Float × Float :=
-  let mag := magnitude v
-  (v.1 / mag, v.2 / mag) -- v/‖v‖
+class PrimInterface (α : Type) where
+  draw : α → (fr : ProofWidgets.Svg.Frame) → ProofWidgets.Svg.Element fr
 
-namespace Primitive
+structure Circle where
+  r : Float
+  c : Float^[2]
+instance : ToString Circle where
+  toString c := "Circle (r: " ++ toString c.r ++ ", c: " ++ toString c.c ++ ")"
+def Circle.o : Circle := Circle.mk 1 ⊞[0,0]
 
-structure circle (α : Type) where
- center : (α × α)
- radious : α
-deriving Repr
+open ProofWidgets Svg in
+def drawCircle (c : Circle) (fr : Frame) : Element fr :=
+  circle (c.c[2],c.c[1]) (.abs c.r) |>.setStroke (0.,0.,0.) (.px 2) |>.setFill (0.,1.,1.) |>.setId "point1"
+#eval Circle.o
+instance : PrimInterface Circle where
+  draw := drawCircle
 
-def envelope_circle (c : circle Float) (v : Float × Float) : Float :=
-  let v_norm := normalize v
-  let p := (c.center.1 + c.radious * v_norm.1, c.center.2 + c.radious * v_norm.2)
-  p.1 * v_norm.1 + p.2 * v_norm.2  -- Produto escalar para projeção
+structure Line where
+  pts : (Float^[2]) × (Float^[2])
+instance : ToString Line where
+  toString l := "Line (l: " ++ toString l.pts ++ ")"
+def Line.o : Line := Line.mk (⊞[0,0], ⊞[1,1])
+open ProofWidgets Svg in
+def drawLine (l : Line) (fr : Frame) : Element fr :=
+  line (l.pts.fst[2],l.pts.fst[1]) (l.pts.snd[2],l.pts.snd[1]) |>.setStroke (1.,0.,0.) (.px 2)
+#eval Line.o
+instance : PrimInterface Line where
+  draw := drawLine
 
-structure rectangle (α : Type) where
- origin : (α × α)
- width : α
- height : α
-deriving Repr
-
-def envelope_rectangle (r : rectangle Float) (v : Float × Float) : Float :=
-  let v_norm := normalize v
-  let corners := [
-    (r.origin.1, r.origin.2),  -- canto inferior esquerdo
-    (r.origin.1 + r.width, r.origin.2),  -- canto inferior direito
-    (r.origin.1, r.origin.2 + r.height),  -- canto superior esquerdo
-    (r.origin.1 + r.width, r.origin.2 + r.height)  -- canto superior direito
-  ]
-  corners.map (λ p => p.1 * v_norm.1 + p.2 * v_norm.2) |>.foldl max corners.head!.1  -- Projeta cada canto e retorna o máximo
+open ProofWidgets Svg in
+private def frame : Frame where
+  xmin   := -2
+  ymin   := -2
+  xSize  := 4
+  width  := 400
+  height := 400
+private def x := @ProofWidgets.Svg.line frame (0.,0.) (1.,0.)
 
 
-structure ellipse (α : Type) where
-  center : (α × α)
-  rx : α
-  ry : α
-deriving Repr
 
-structure line (α : Type) where
-  starting : (α × α)
-  ending : (α × α)
-deriving Repr
+-- #check PrimInterface.mk Circle.o
 
-structure polyline (α : Type) where
-  points : List (α × α)
-deriving Repr
+#check (PrimInterface.draw)
+def d := PrimInterface.draw Circle.o frame
 
-structure polygon (α : Type) where
-  points : List (α × α)
-deriving Repr
+#check d
+#html d.toHtml
 
-structure QBezier ( α : Type ) where
-  basePoints : List (α × α)
-  controlPoints : List (α × α)
-  -- Verificar se len(basepoints < controlPoints) e se len(basePoints ≥ 2)
-deriving Repr
+structure Prim where
+  {T : Type}
+  [inst : PrimInterface T]
+  [strg : ToString T]
+  val : T
 
-structure Style where
-  stroke : String
-  strokeWidth : Nat
-  fill : String
-  opacity : Float
-  deriving Repr
+def Prim.draw (p : Prim) (fr : ProofWidgets.Svg.Frame) : ProofWidgets.Svg.Element fr :=
+  p.inst.draw p.val fr
 
-/-
-structure path (α : Type) where
-  d : String  -- Definição do caminho como string de comandos SVG
-deriving Repr
--/
+instance : ToString Prim where
+  toString p := @ToString.toString p.T p.strg p.val
 
-end Primitive
+#eval Prim.mk Circle.o
+def prim {α : Type} [PrimInterface α] [ToString α] (a : α) : Prim := Prim.mk a
+#eval prim Line.o
+
+def fooo : Array Prim := #[⟨Circle.o⟩, ⟨Line.o⟩]
+
+-- def foo : List Prim := [prim Circle.o, prim Line.o]
+def foo : Array Prim := #[prim Circle.o, prim Line.o]
+
+open ProofWidgets Svg in
+private def svg : Svg frame :=
+  { elements := Array.map (λx => Prim.draw x frame) foo}
+
+open ProofWidgets Svg in
+def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
+  let svg : ProofWidgets.Svg fr := { elements := Array.map (λx => Prim.draw x fr) a}
+  svg.toHtml
+
+#html svg.toHtml
+#check svg.toHtml
+
+-- #check Array.map prim #[prim Circle.o, prim Line.o]
+
+-- def Prim.comp {α β : Type} [PrimInterface α] [PrimInterface β] [ToString α] [ToString β] (p1 : α) (p2 : β) : Array Prim :=
+--   #[prim p1, prim p2]
+
+class HPlus (α : Type u) (β : Type v) where
+  hPlus : α → β → Array Prim
+
+instance  {α β : Type} [PrimInterface α] [PrimInterface β] [ToString α] [ToString β] : HPlus  α β where
+  hPlus p1 p2 := #[prim p1, prim p2]
+instance  {α : Type} [PrimInterface α] [ToString α] : HPlus  α (Array Prim) where
+  hPlus p a := #[prim p] ++ a
+instance  {α : Type} [PrimInterface α] [ToString α] : HPlus  (Array Prim) α where
+  hPlus a p := a ++ #[prim p]
+instance : HPlus  Prim Prim where
+  hPlus p1 p2 := #[p1, p2]
+instance  : HPlus  Prim (Array Prim) where
+  hPlus p1 p2 := #[p1] ++ p2
+instance  : HPlus  (Array Prim) Prim where
+  hPlus p1 p2 := p1 ++ #[p2]
+instance  : HPlus  (Array Prim) (Array Prim) where
+  hPlus p1 p2 := p1 ++ p2
+
+infixr:80 " ⊕ " => HPlus.hPlus
+
+-- #ev(us Circle⊕ .o Circl : Array Prim)e.o
+#eval Circle.o ⊕ Circle.o
+
+#eval Circle.o ⊕ Circle.o ⊕ Line.o
+#html drawsvg (Circle.o ⊕ (Circle.mk 0.5 ⊞[0,1]) ⊕ Line.o)
+
+open ProofWidgets Svg in
+private def frame2 : Frame where
+  xmin   := -5
+  ymin   := -5
+  xSize  := 10
+  width  := 400
+  height := 400
+#html drawsvg (Circle.o ⊕ (Circle.mk 0.5 ⊞[1,1]) ⊕ Line.o) frame2
+def eyes := (Circle.mk 0.3 ⊞[-0.8,1]) ⊕ (Circle.mk 0.3 ⊞[0.8,1])
+#html drawsvg (Circle.mk 2.0 ⊞[0,0] ⊕ eyes ⊕ Line.mk (⊞[-1,-0.5], ⊞[1,-0.5])) frame2
+
+#eval (#[] : Array Prim)
+
+end Primitives
