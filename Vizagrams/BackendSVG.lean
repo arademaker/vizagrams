@@ -2,6 +2,7 @@ import Vizagrams.Primitivesorg
 import ProofWidgets.Data.Svg
 import ProofWidgets.Component.HtmlDisplay
 
+
 set_option autoImplicit true
 set_default_scalar Float
 
@@ -22,7 +23,8 @@ class HPlus (α : Type u) (β : Type v) where
 infixr:80 " ⊕ " => HPlus.hPlus
 
 open ProofWidgets Svg in
-private def frame : Frame where
+
+def frame : Frame where
   xmin   := -2
   ymin   := -2
   xSize  := 4
@@ -55,7 +57,6 @@ def drawLine (l : Line) (fr : Frame) : Element fr :=
 instance : PrimInterface Line where
   draw := drawLine
 
-
 /-Develop Prim -/
 
 def Prim.draw (p : Prim) (fr : ProofWidgets.Svg.Frame) : ProofWidgets.Svg.Element fr :=
@@ -86,5 +87,9 @@ instance  : HPlus  (Array Prim) Prim where
   hPlus p1 p2 := p1 ++ #[p2]
 instance  : HPlus  (Array Prim) (Array Prim) where
   hPlus p1 p2 := p1 ++ p2
+
+-- Mark backend
+
+
 
 end backendsvg
