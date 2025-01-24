@@ -21,6 +21,14 @@ class HPlus (α : Type u) (β : Type v) where
 
 infixr:80 " ⊕ " => HPlus.hPlus
 
+open ProofWidgets Svg in
+private def frame : Frame where
+  xmin   := -2
+  ymin   := -2
+  xSize  := 4
+  width  := 400
+  height := 400
+
 open Primitives
 
 /- Circle backend -/
@@ -57,14 +65,6 @@ instance : ToString Prim where
   toString p := @ToString.toString p.T p.strg p.val
 
 def prim {α : Type} [PrimInterface α] [ToString α] (a : α) : Prim := Prim.mk a
-
-open ProofWidgets Svg in
-private def frame : Frame where
-  xmin   := -2
-  ymin   := -2
-  xSize  := 4
-  width  := 400
-  height := 400
 
 open ProofWidgets Svg in
 def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
