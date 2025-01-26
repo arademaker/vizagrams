@@ -40,4 +40,17 @@ def Mark.flat (t : 𝕋 Mark) : Array Prim := algθ (Mark.θ <$> t)
 open ProofWidgets Svg in
 def Mark.draw (t : 𝕋 Mark) (fr : Frame := frame) : ProofWidgets.Html := drawsvg (Mark.flat t) fr
 
+instance : HAdd (𝕋 Mark) (𝕋 Mark) (𝕋 Mark) where
+  hAdd m1 m2 := 𝕋.comp m1 m2
+
+instance  {α β : Type} [MarkInterface α] [MarkInterface β] [PrimInterface α] [PrimInterface β] [ToString α] [ToString β] :
+  HAdd α β (𝕋 Mark) where
+  hAdd p1 p2 := 𝕋.comp (𝕋.pure ⟨p1⟩) (𝕋.pure ⟨p2⟩)
+
+instance  {α : Type} [MarkInterface α] [PrimInterface α] [ToString α] : HAdd α (𝕋 Mark) (𝕋 Mark) where
+  hAdd p m := 𝕋.comp (𝕋.pure ⟨p⟩) m
+
+instance  {β : Type} [MarkInterface β] [PrimInterface β] [ToString β] : HAdd (𝕋 Mark) β (𝕋 Mark) where
+  hAdd m p := 𝕋.comp m (𝕋.pure ⟨p⟩)
+
 end mark

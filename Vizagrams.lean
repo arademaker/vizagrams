@@ -3,9 +3,6 @@
 
 import Vizagrams.Basic
 import Vizagrams.FreeMonad
-import Vizagrams.Geom
-import Vizagrams.Mark
-import Vizagrams.Prim
-import Vizagrams.Primitives
-import Vizagrams.Style
-import Vizagrams.Transformations
+import Vizagrams.Markorg
+import Vizagrams.Primitivesorg
+import Vizagrams.Head
