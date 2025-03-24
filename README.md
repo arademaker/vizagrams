@@ -1,10 +1,8 @@
 # vizagrams
 
 ## Organização 
-O arquivo Primitives.lean foi modularizado para os arquivos Primitivesorg.lean e BackendSVG.lean
-O arquivo Mark.lean foi modularizado para Markorg.lean
 
-Na pasta Test, seguem os arquivos test1 e test2 que contém os exemplos das file Primitives.lean e Mark.lean
-Também há um arquivo exPrim criado com intuito de ser um tutorial
+Estão presentes duas abordagems:
+A primeira ocorre da re-modularização dos arquivos `Prim.lean` e `Mark.lean` para os arquivos `Primitivesorg.lean`, `Markorg.lean` e `head.lean`. Na pasta Test há exemplos de uso dessa abordagem.
 
-No arquivo Main.lean há um exemplo de uso
+A segunda considera uma abordagem de Primitiva sendo a composição de uma Primitiva Geométrica a uma Primitiva de Estilo. Esta abordagem se encontra nos arquivos precedidade de `Viz` e exemplos estão na pasta Test/vizagr

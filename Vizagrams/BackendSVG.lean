@@ -1,7 +1,7 @@
 import Vizagrams.Primitivesorg
 import ProofWidgets.Data.Svg
 import ProofWidgets.Component.HtmlDisplay
-
+import Scilean
 
 set_option autoImplicit true
 set_default_scalar Float
@@ -54,8 +54,38 @@ open ProofWidgets Svg in
 def drawLine (l : Line) (fr : Frame) : Element fr :=
   line (l.pts.fst[2],l.pts.fst[1]) (l.pts.snd[2],l.pts.snd[1]) |>.setStroke (1.,0.,0.) (.px 2)
 
+def line0 : Line := ⟨ ⊞[0,0] , ⊞[1, 1]⟩
+#eval line0
+#check (line0.pts.fst[2], line0.pts.fst[1])
+open ProofWidgets Svg in
+#check line (line0.pts.fst[2], line0.pts.fst[1]) (line0.pts.snd[2],line0.pts.snd[1])
+
 instance : PrimInterface Line where
   draw := drawLine
+
+/- Ellipse Backend -/
+
+instance : ToString Ellipse where
+  toString k := s!" Ellipse ( rx: {k.rx}, ry: {k.ry}, c: {k.c}, ang: {k.ang} )"
+
+/- Polygon Backend-/
+instance : ToString Polygon where
+  toString p := s!"Polygon ( pts: {p.pts})"
+
+def arrayOfPoints : Array (Float^[2]) := #[⊞[1.0, 2.0], ⊞[3.0, 4.0], ⊞[5.0, 6.0]]
+
+open ProofWidgets Svg in
+def vecToPoint (x : Float^[2]) (fr : Frame := fr) : Point fr :=
+  Point.abs x[0] x[1]
+
+open ProofWidgets Svg in
+def drawPolygon (p : Polygon) (fr : Frame) : Element fr :=
+  let arr := p.pts
+  let arrpts := arr.map (vecToPoint)
+  polygon (arrpts) |>.setStroke (1.,0.,0.) (.px 2)
+
+instance : PrimInterface Polygon where
+  draw := drawPolygon
 
 /-Develop Prim -/
 

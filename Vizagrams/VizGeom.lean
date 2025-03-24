@@ -1,16 +1,10 @@
 import Vizagrams.Transformations
-import SciLean
-import ProofWidgets.Data.Svg
-import ProofWidgets.Component.HtmlDisplay
-
-open SciLean Scalar RealScalar
-
-set_option autoImplicit true
-set_default_scalar Float
 
 open GeometricTransformation
 namespace GeometricPrimitive
 
+
+-- Utilizamos uma Inductive pois o conjunto de Primitivas Geométricas é finito
 inductive Geom where
   | line     (src trg : Float^[2])
   | circle   (r : Float) (c : Float^[2])
@@ -24,8 +18,9 @@ instance : Repr Geom where
     | .polyline points, _ => "Geom.polyline " ++ toString points
     | .polygon points, _ => "Geom.polygon " ++ toString points
 
+-- É mais fácil trabalhar tansformações geométricas utilizando suas formas covariantes
 inductive CovGeom where
-  | line     (src trg : Float^[2])
+  | line     (src trg : Float^[2]) 
   | circle   (p1 p2 : Float^[2])
   | polyline (points : Array (Float^[2])) -- (type : PolylineType)
   | polygon  (points : Array (Float^[2]))

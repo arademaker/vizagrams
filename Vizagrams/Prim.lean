@@ -81,4 +81,11 @@ private def s : Style := {strokeColor := Color.mk 1.0 0.0 0.0, strokeWidth := so
 #html drawsvg #[x, (G.scale 1)*y, (G.translate ⊞[1,1]) * z]
 #html drawsvg #[s*x, y, (G.translate ⊞[1,1]) * z]
 
+#eval polygon
+
+private def t : Prim := {geom := polygon , s}
+#html drawsvg #[t]
+private def r : Prim := {geom := polyline , s}
+#html drawsvg #[r]
+
 end GraphicalPrimitive
