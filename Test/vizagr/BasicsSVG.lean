@@ -7,7 +7,7 @@ open VizBackend
 open GraphicalPrimitive
 open ProofWidgets Svg
 
--- set_option diagnostics true
+--set_option diagnostics true
 -- Creating a Circle
 
 def MyCircle (Radius:Float:= 1.0 ) (Center : Float^[2] := ⊞[ 0.0 , 0.0 ]): Geom := Geom.circle Radius  Center
@@ -48,6 +48,10 @@ def EasyPolygon := NewPolygon #[⊞[-0.7,-0.5],⊞[0.7,-0.5],⊞[0.5,0.5]]
 
 #html drawsvg #[EasyPolygon]
 
+def EasyLine := NewLine ⊞[-0.7,-0.5] ⊞[0.7,-0.5]
+#check EasyLine
+#html drawsvg EasyLine
+
 def translationrigth := GeometricTransformation.G.translate ⊞[1,0]
 
 def a := translationrigth * EasyPolygon
@@ -77,4 +81,5 @@ def head_o : Head := Head.mk 1 2
 def head_m : Mark := Mark.mk head_o
 #eval head_m
 
-#html drawsvg head_m
+
+#html drawsvg (head_m ⊕ a)

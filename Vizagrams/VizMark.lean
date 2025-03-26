@@ -29,5 +29,12 @@ def Mark.flat (t : 𝕋 Mark) : Array Prim := algθ ((𝕋.map Mark.θ) t)
 instance : Coe Mark (Array Prim) where
   coe m := m.θ
 
+instance  : HPlus  Prim (Mark) where
+  hPlus p1 p2 := #[p1] ++ p2
+instance  : HPlus  (Mark) Prim where
+  hPlus p1 p2 := p1 ++ #[p2]
+instance  : HPlus  (Mark) (Mark) where
+  hPlus p1 p2 := p1 ++ p2
+
 instance : HAdd (𝕋 Mark) (𝕋 Mark) (𝕋 Mark) where
   hAdd m1 m2 := 𝕋.comp m1 m2

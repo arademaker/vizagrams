@@ -3,9 +3,11 @@ import Vizagrams.VizPrim
 --set_option autoImplicit true
 open GraphicalPrimitive
 namespace FreeMonad
+
 structure H where
   g : Float
 deriving Repr, BEq
+
 instance : Mul H where
   mul x y := H.mk (x.g * y.g)
 

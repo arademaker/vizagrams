@@ -11,6 +11,9 @@ structure Prim where
   s := ({} : Style) -- Uses the default Style none none none
 deriving Repr
 
+instance : Coe Prim (Array Prim) where
+  coe p := #[p]
+
 /- Estrutura que representa uma transformaçãoa uma primitiva Gráfica,
 isto é, uma transformação geométrica e uma transformação de estilo -/
 structure H where
@@ -19,6 +22,8 @@ structure H where
 
 instance : Repr H where
     reprPrec h _ := "{ g:= G, s := " ++ repr h.s ++ " }"
+
+
 
 instance : HMul G Prim Prim where
   hMul g p := {p with geom := g * p.geom}

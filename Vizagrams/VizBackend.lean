@@ -38,7 +38,6 @@ def primToElem (p : Prim) (fr : Frame) : Element fr :=
   , strokeWidth := styleToSize p.s.strokeWidth fr
   }
 
-
 def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
   let svg : ProofWidgets.Svg fr := { elements := Array.map (λx => primToElem x fr) a}
   svg.toHtml
@@ -50,5 +49,9 @@ def NewCircle (r : Float) (c : Float^[2]) (st : Style := {fillColor := Color.mk 
 def NewPolygon (pts : Array (Float^[2])) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
   let p := Geom.polygon pts
   {geom := p , s := st}
+
+def NewLine ( l₁ l₂  : Float^[2] ) ( st : Style := {strokeColor := Color.mk 0 0 0} ): Prim :=
+  let line := Geom.line l₁ l₂
+  {geom := line , s := st}
 
 end VizBackend
