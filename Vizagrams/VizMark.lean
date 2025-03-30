@@ -1,6 +1,8 @@
 import Vizagrams.VizPrim
 import Vizagrams.FreeMonad
+import Vizagrams.Transformations
 
+open GeometricTransformation
 open FreeMonad
 open GraphicalPrimitive
 set_option autoImplicit true
@@ -38,3 +40,9 @@ instance  : HPlus  (Mark) (Mark) where
 
 instance : HAdd (𝕋 Mark) (𝕋 Mark) (𝕋 Mark) where
   hAdd m1 m2 := 𝕋.comp m1 m2
+
+instance : HMul G Mark (Array Prim) where
+  hMul g M  := g * M.θ
+
+instance : HMul Mark G  (Array Prim) where
+  hMul M g := g * M.θ

@@ -14,7 +14,7 @@ deriving Repr
 instance : Coe Prim (Array Prim) where
   coe p := #[p]
 
-/- Estrutura que representa uma transformaçãoa uma primitiva Gráfica,
+/- Estrutura que representa uma transformaçãoa a uma primitiva Gráfica,
 isto é, uma transformação geométrica e uma transformação de estilo -/
 structure H where
   g : G
@@ -23,10 +23,11 @@ structure H where
 instance : Repr H where
     reprPrec h _ := "{ g:= G, s := " ++ repr h.s ++ " }"
 
-
-
 instance : HMul G Prim Prim where
   hMul g p := {p with geom := g * p.geom}
+
+instance : HMul G (Array Prim) (Array Prim) where
+  hMul g ps := ps.map (λ p => g * p)
 
 instance : HMul Style Prim Prim where
   hMul s p := {p with s := Style.comp s  p.s}
@@ -44,6 +45,7 @@ instance  : HPlus  (Array Prim) (Array Prim) where
   hPlus p1 p2 := p1 ++ p2
 
 infixr:80 " ⊕ " => HPlus.hPlus
+
 
 
 end GraphicalPrimitive

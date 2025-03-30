@@ -1,4 +1,16 @@
 import Vizagrams.VizMark
+import Vizagrams.VizBackend
+import Vizagrams.VizPrim
+import Vizagrams.Transformations
+import Vizagrams.Marks.RegularPolygon
+
+open SciLean Scalar RealScalar
+open GraphicalMark
+open VizBackend
+open GeometricPrimitive
+open GraphicalPrimitive
+open ProofWidgets Svg
+
 
 /- Implementação do Julia
 
@@ -16,13 +28,21 @@ end
 
 -/
 
-structure Arrow where
-  pts : Float^[2]
-  headsize : Float
-  headstyle : Style
-  headmark : Mark
-/-
-instance : MarkInterface Arrow where
-  θ h :=
-    let l :=
--/
+structure Arrow  where
+  pts : Float^[2]  -- Direção da Flecha
+  -- headsize : Float  -- Tamanho da ponta
+  -- headstyle : Style  -- Estilização da ponta
+  -- headmarkValue : T  -- O valor da marca na ponta
+
+instance : ToString Arrow where
+    toString p := s!"l "
+
+instance : MarkInterface Arrow  where
+  θ a := arrow
+
+instance : Coe Arrow Mark where
+  coe m := Mark.mk m
+
+def Arrow_o : Arrow := { pts := ⊞[0 , 0]}
+
+#html drawsvg Arrow_o

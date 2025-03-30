@@ -11,9 +11,9 @@ open Sty
 namespace VizBackend
 
 private def frame : Frame where
-  xmin   := -2
-  ymin   := -2
-  xSize  := 4
+  xmin   := -5
+  ymin   := -5
+  xSize  := 10
   width  := 400
   height := 400
 
