@@ -1,6 +1,7 @@
 import Vizagrams.VizMark
 import Vizagrams.VizBackend
 import Vizagrams.VizPrim
+import Vizagrams.Style
 
 open SciLean Scalar RealScalar
 open GraphicalMark
@@ -36,6 +37,8 @@ structure RegularPolygon where
   sides : Nat
   size : Float
   h : sides ≥ 3 -- Todo polígono tem ao menos 3 lados
+  style : Sty.Style
+
 
 instance : ToString RegularPolygon where
   toString p := s!" Regular Polygon : ( {p.sides} sides , size {p.size} )"
@@ -56,13 +59,14 @@ def regToPoly (p : RegularPolygon) : Array (Float^[2]) :=
   Array.map findPointbyAngle Arr
 
 instance : MarkInterface RegularPolygon where
-  θ h := NewPolygon (regToPoly h)
+  θ h := NewPolygon (regToPoly h) h.style
 
 instance : Coe RegularPolygon Mark where
   coe m := Mark.mk m
 
+def st: Sty.Style := {fillColor := Color.mk 0.0 0.0 0.0}
 def triangle : RegularPolygon :=
-  RegularPolygon.mk 3 1.0 (by decide)
+  RegularPolygon.mk 3 1.0 (by decide) st
 
 #check (triangle : Mark)
 

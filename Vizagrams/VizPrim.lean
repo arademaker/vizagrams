@@ -11,6 +11,9 @@ structure Prim where
   s := ({} : Style) -- Uses the default Style none none none
 deriving Repr
 
+instance : ToString Prim where
+  toString p := s!"Prim"
+
 instance : Coe Prim (Array Prim) where
   coe p := #[p]
 

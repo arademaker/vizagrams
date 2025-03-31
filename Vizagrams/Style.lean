@@ -15,6 +15,8 @@ structure Style where
   strokeWidth := (none : Option StyleSize)
   fillColor   := (none : Option Color)
 
+def styledefout : Style := Style.mk none none (Color.mk 0.0 0.0 0.0)
+
 instance : Repr Style where
     reprPrec s _ :=
       let strokeColorStr := match s.strokeColor with
