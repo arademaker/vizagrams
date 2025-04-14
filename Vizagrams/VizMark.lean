@@ -1,9 +1,7 @@
 import Vizagrams.VizPrim
-import Vizagrams.FreeMonad
 import Vizagrams.Transformations
 
 open GeometricTransformation
-open FreeMonad
 open GraphicalPrimitive
 set_option autoImplicit true
 
@@ -26,8 +24,6 @@ instance : ToString Mark where
 instance : MarkInterface Prim where
   θ p := #[p]
 
-def Mark.flat (t : 𝕋 Mark) : Array Prim := algθ ((𝕋.map Mark.θ) t)
-
 instance : Coe Mark (Array Prim) where
   coe m := m.θ
 
@@ -43,11 +39,10 @@ instance  : HPlus (Mark) (Mark) where
 instance  : HPlus (Array Prim) (Mark) where
   hPlus p1 p2 := p1 ++ p2
 
-instance : HAdd (𝕋 Mark) (𝕋 Mark) (𝕋 Mark) where
-  hAdd m1 m2 := 𝕋.comp m1 m2
-
 instance : HMul G Mark (Array Prim) where
   hMul g M  := g * M.θ
 
 instance : HMul Mark G  (Array Prim) where
   hMul M g := g * M.θ
+
+end GraphicalMark

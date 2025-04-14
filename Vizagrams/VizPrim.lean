@@ -35,6 +35,19 @@ instance : HMul G (Array Prim) (Array Prim) where
 instance : HMul Style Prim Prim where
   hMul s p := {p with s := Style.comp s  p.s}
 
+def applyS (s : Style) (p : Prim) : Prim :=
+  s * p
+
+def applySArray (s : Style) (ps : Array Prim) : Array Prim :=
+  ps.map (fun p => s * p)
+
+def applyG (g : G) (p : Prim) : Prim :=
+  g * p
+
+def applyGArray (g : G) (ps : Array Prim) : Array Prim :=
+  ps.map (fun p => g * p)
+
+
 class HPlus (α : Type u) (β : Type v) where
   hPlus : α → β → Array Prim
 
