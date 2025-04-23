@@ -59,4 +59,12 @@ def NewLine ( l₁ l₂  : Float^[2] ) ( st : Style := {strokeColor := Color.mk 
   let line := Geom.line l₁ l₂
   {geom := line , s := st}
 
+def BoundingBox.toFrame (bb : BoundingBox) : Frame :=
+  { frame with
+    xmin  := bb.lower[0],
+    ymin  := bb.lower[1],
+    xSize := bb.upper[0] - bb.lower[0]
+  }
+
+
 end VizBackend

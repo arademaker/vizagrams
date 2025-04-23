@@ -2,7 +2,7 @@ import Vizagrams.Transformations
 
 open GeometricTransformation
 namespace GeometricPrimitive
-
+set_option diagnostics true
 
 -- Utilizamos uma Inductive pois o conjunto de Primitivas Geométricas é finito
 inductive Geom where
@@ -20,7 +20,7 @@ instance : Repr Geom where
 
 -- É mais fácil trabalhar tansformações geométricas utilizando suas formas covariantes
 inductive CovGeom where
-  | line     (src trg : Float^[2]) 
+  | line     (src trg : Float^[2])
   | circle   (p1 p2 : Float^[2])
   | polyline (points : Array (Float^[2])) -- (type : PolylineType)
   | polygon  (points : Array (Float^[2]))
@@ -54,5 +54,52 @@ instance : HMul G CovGeom CovGeom where
 instance : HMul G Geom Geom where
   hMul g p := ψ (g * (ϕ p))
 
+-- Auxiliar: calcula envelope de um array de pontos,
+def envelopePts (pts : Array (Float^[2])) (v : Float^[2]) : Float :=
+  if h : pts.size > 0 then
+    -- índice 0 está garantido existir
+    let first := pts[0]!
+    let init  := v.dot first
+    pts.foldl (fun acc p => max acc (v.dot p )) init
+  else
+    0.0
+
+-- Envelope geral de qualquer `Geom` na direção `v`.
+def envelope (g : Geom) (v' : Float^[2]) : Float :=
+  let v := normalize v'
+  match g with
+  | .circle r c   => v.dot (c + r • v)
+  | .line   p q   => max (v.dot p ) (v.dot q )
+  | .polyline pts => pts.foldl (fun acc p => max acc (v.dot p ))  (v.dot pts[0]! )
+  | .polygon  pts => pts.foldl (fun acc p => max acc (v.dot p ))  (v.dot pts[0]! )
+
+
+/-- Retângulo envoltório (bounding box) dado pelos limites mínimo e máximo em x e y. -/
+structure BoundingBox where
+  lower : Float^[2]  -- canto inferior‐esquerdo
+  upper : Float^[2]  -- canto superior‐direito
+
+
+def boundingBox (g : Geom) : BoundingBox :=
+  let ex₁ := envelope g (⊞[1.0, 0.0])
+  let ex₂ := envelope g (⊞[-1.0, 0.0])
+  let ey₁ := envelope g (⊞[0.0, 1.0])
+  let ey₂ := envelope g (⊞[0.0, -1.0])
+  { lower := ⊞[-ex₂, -ey₂]
+  , upper := ⊞[ ex₁,  ey₁] }
+
+def BoundingBox.union (b₁ b₂ : BoundingBox) : BoundingBox :=
+  let lx := min (b₁.lower[0]) (b₂.lower[0])
+  let ly := min (b₁.lower[1]) (b₂.lower[1])
+  let ux := max (b₁.upper[0]) (b₂.upper[0])
+  let uy := max (b₁.upper[1]) (b₂.upper[1])
+  { lower := ⊞[lx, ly], upper := ⊞[ux, uy] }
+
+def boundingBoxGroup (gs : Array Geom) : BoundingBox :=
+  if h : gs.size > 0 then
+    let firstBB := boundingBox gs[0]     -- boundingBox de um único Geom
+    gs.foldl (fun acc g => acc.union (boundingBox g)) firstBB
+  else
+    { lower := ⊞[0.0, 0.0], upper := ⊞[0.0, 0.0] }
 
 end GeometricPrimitive

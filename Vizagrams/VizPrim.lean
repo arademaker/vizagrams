@@ -62,6 +62,16 @@ instance  : HPlus  (Array Prim) (Array Prim) where
 
 infixr:80 " ⊕ " => HPlus.hPlus
 
+def boundingBoxPrim (p : Prim) : BoundingBox :=
+  boundingBox p.geom
 
+/-- União de bounding‐boxes de um array de Prim. -/
+def boundingBoxPrims (ps : Array Prim) : BoundingBox :=
+  if h : ps.size > 0 then
+    let firstBB := boundingBoxPrim ps[0]
+    ps.foldl (fun acc p => acc.union (boundingBoxPrim p)) firstBB
+  else
+    -- Array vazio: BB degenerado na origem
+    { lower := ⊞[0.0,0.0], upper := ⊞[0.0,0.0] }
 
 end GraphicalPrimitive

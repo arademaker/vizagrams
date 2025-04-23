@@ -110,3 +110,17 @@ def ℍ𝕋 : FreeMonad.𝕋 Mark :=  ℍtransformation * 𝕥₁
 #check 𝕋ℍ
 #html draw 𝕋ℍ
 #html draw ℍ𝕋
+
+
+def bb_x : BoundingBox     := boundingBoxPrim x
+#html drawsvg ( x ) ( BoundingBox.toFrame bb_x)
+
+def bb_ec : BoundingBox    := boundingBoxPrim EasyCircle
+#html drawsvg EasyCircle (BoundingBox.toFrame bb_ec)
+
+def bb_head : BoundingBox  := boundingBoxOfMark head_m
+#html draw head_m (BoundingBox.toFrame bb_head)
+
+def combo : Array Prim     := #[x, y]
+def bb_combo : BoundingBox := boundingBoxPrims combo
+#html drawsvg combo (BoundingBox.toFrame bb_combo)

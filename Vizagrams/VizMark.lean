@@ -1,6 +1,8 @@
 import Vizagrams.VizPrim
 import Vizagrams.Transformations
+import Vizagrams.VizGeom
 
+open GeometricPrimitive
 open GeometricTransformation
 open GraphicalPrimitive
 set_option autoImplicit true
@@ -44,5 +46,15 @@ instance : HMul G Mark (Array Prim) where
 
 instance : HMul Mark G  (Array Prim) where
   hMul M g := g * M.θ
+
+/--
+  Bounding‐box de um Mark, via sua interface θ : T → Array Prim.
+  Basta agregar os prims retornados por θ.
+-/
+def boundingBoxMark {T : Type} [inst : MarkInterface T] (m : T) : BoundingBox :=
+  boundingBoxPrims (inst.θ m)
+
+def boundingBoxOfMark (m : Mark) : BoundingBox :=
+  boundingBoxPrims m.θ
 
 end GraphicalMark
