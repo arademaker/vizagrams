@@ -78,7 +78,6 @@ def alg : 𝕋 Float → Float
 def applyH (h : H) (prims : Array Prim) : Array Prim :=
   prims.map (fun p => h.s * (h.g * p))
 
-
 def algθ : 𝕋 (Array Prim) → Array Prim
   | 𝕋.pure x => x
   | 𝕋.comp x y => (algθ x) ⊕ (algθ y)
