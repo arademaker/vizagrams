@@ -17,6 +17,9 @@ instance : ToString Prim where
 instance : Coe Prim (Array Prim) where
   coe p := #[p]
 
+instance : Coe Prim GeometricPrimitive.Geom where
+ coe p := p.geom
+
 /- Estrutura que representa uma transformaçãoa a uma primitiva Gráfica,
 isto é, uma transformação geométrica e uma transformação de estilo -/
 structure H where

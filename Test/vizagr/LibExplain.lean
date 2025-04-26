@@ -109,14 +109,14 @@ def t_r₁ : GeometricTransformation.G := GeometricTransformation.G.translate �
 
 -- Aplicamos transformações a esquerda do objeto Prim
 #eval t_r₁ * circleₚ
-def circleₚtoRigth := t_r₁ * circleₚ
-#check circleₚtoRigth -- circleₚtoRigth : Prim
+def circleₚtoright := t_r₁ * circleₚ
+#check circleₚtoright -- circleₚtoright : Prim
 -- podemos ver as diferenças
 #html drawsvg circleₚ
-#html drawsvg circleₚtoRigth
+#html drawsvg circleₚtoright
 -- Vamos tentar verificar os objetos no mesmo frame
-#check circleₚ ⊕ circleₚtoRigth -- circleₚ ⊕ circleₚtoRigth : Array Prim
-def two_circles := circleₚ ⊕ circleₚtoRigth
+#check circleₚ ⊕ circleₚtoright -- circleₚ ⊕ circleₚtoright : Array Prim
+def two_circles := circleₚ ⊕ circleₚtoright
 #html drawsvg two_circles
 -- Entretanto não é possível  observá-los com draw, pois não temos coe Array Prim → 𝕋 Mark
 
@@ -134,8 +134,8 @@ instance : HMul G Mark (Array Prim) where
   hMul g M  := g * M.θ
 -/
 #html drawsvg ( t_r₁ * circleₘ )
-def circleₘtoRigth := t_r₁ * circleₘ
-def twoMarkCircles := circleₘtoRigth ⊕ circleₘ
+def circleₘtoright := t_r₁ * circleₘ
+def twoMarkCircles := circleₘtoright ⊕ circleₘ
 #check twoMarkCircles -- twoMarkCircles : Array Prim
 #html drawsvg twoMarkCircles
 /-Isso nos mostra que o tipo Mark sozinho é "instável" pois quase todas as aplicações
@@ -144,7 +144,111 @@ No final veremos como funcionam as transformações em 𝕋 Mark
 -/
 
 -- Rotações
+set_default_scalar Float
+open SciLean Scalar RealScalar in
+def g_45 : GeometricTransformation.G := GeometricTransformation.G.rotate (π/4)
 
+-- Vamos precisar definir um novo objeto onde possamos ver os efeitos de rotação
+def square₀ : Prim := NewPolygon #[⊞[0,0],⊞[1,0],⊞[1,1],⊞[0,1]]
+#html drawsvg square₀
+#check g_45 * square₀ -- g_45 * square₀ : Prim
+
+def squareᵣ := g_45 * square₀
+#html drawsvg squareᵣ
+
+-- Da mesma forma que em translate, a operação quando aplicada em um Array Prim, é aplicada elemento a elemento
+def square₁ : Prim := t_r₁ * square₀
+def twoSquares := square₀ ⊕ square₁
+#html drawsvg (g_45 * twoSquares)
+
+/- Observe que na rotação vemos um efeito de translação no objeto,
+isso ocorre pois o objeto é rotacionado ao redor da origem
+`importante: Verificar operação de rotação`.
+-/
+
+-- Transformação de escala
+def scale : GeometricTransformation.G := GeometricTransformation.G.scale 2
+def bigSquare := scale * square₀
+#html drawsvg bigSquare
+#html drawsvg (scale * twoSquares)
+
+-- Também podemos compor transformações
+#html drawsvg ( scale ∘ g_45 ∘ t_r₁ * square₀ )
+
+-- Trasformações de estilo
+/- Em `Style.lean` temos
+structure Style where
+  strokeColor := (none : Option Color)
+  strokeWidth := (none : Option StyleSize)
+  fillColor   := (none : Option Color)
+-/
+
+def borderToblue : Sty.Style := {strokeColor := Color.mk 0 0 1 }
+#html drawsvg (borderToblue * bigSquare)
+
+def size : Sty.StyleSize := .px 10
+def bigborder : Sty.Style := {strokeWidth := size}
+#html drawsvg ( bigborder * (borderToblue * bigSquare))
+
+def Toblue : Sty.Style := {fillColor := Color.mk 0 0 1 }
+#html drawsvg (Toblue * bigSquare)
+/- As operações de estilo são definidas utilizando rightOption
+
+def rightOption {α : Type} (o1 : Option α) (o2 : Option α) : Option α :=
+  match o2 with
+  | none => o1
+  | some a => some a
+
+Portanto quando tentamos Toblue * bigSquare, nada acontece pois o criamos
+utilizando NewPolygon que pre_seleciona fillColor
+-/
+def newSquare : Prim := {geom := Geom.polygon #[⊞[0,0], ⊞[2,0], ⊞[2,2], ⊞[0,2]] }
+#eval newSquare
+#html drawsvg newSquare -- Como NewSquare não possui fill, não é possível ver nada
+#html drawsvg ( Toblue * newSquare )
+-- Também podemos compor diversos estilos
+def redborder : Sty.Style := {strokeColor := Color.mk 1 0 0}
+#eval redborder.comp Toblue
+#html drawsvg ((redborder.comp Toblue) * (bigborder * newSquare))
+#html drawsvg ( g_45 * ((redborder.comp Toblue) * (bigborder * newSquare)))
+
+/- Envelope e BoundingBox
+O envelope é uma operação bastante interessante, ela pode ser utilizada para definirmos
+o frame de nossos diagramas
+
+O que é o envelope ?
+Dado uma direção, o envelope de um diagrama naquela direção é a menor distância entre a origem e
+a linha de separação ( Reta que divide o espaço em dois, um contendo o diagrame e o outro vazio)
+-/
+#check (square₀ : Geom) -- `instaciei Coe Prim Geom para esse exemplo `
+#eval (envelope square₀ ⊞[1,1])
+-- Para calcular o BoundingBox de um diagram, basta calcular o envelope em todas as direções
+def BoundingBox_square₀ := boundingBoxPrim square₀
+#html drawsvg square₀ (BoundingBox.toFrame BoundingBox_square₀ )
+-- Vemos que o boundingbox de um square é ele próprio
+
+def bb_s45 := boundingBoxPrim (g_45 * square₀)
+#html drawsvg (g_45 * square₀) (BoundingBox.toFrame bb_s45)
+-- Entretanto quando rotacionamos, agora ele não ocupa toda a caixa
+
+-- Temos também um para Array Prim `redundante`
+def bb_2s := boundingBoxPrims twoSquares
+#html drawsvg twoSquares (BoundingBox.toFrame bb_2s)
+def bb_2s45 := boundingBoxPrims (g_45 * twoSquares)
+#html drawsvg (g_45 * twoSquares) (BoundingBox.toFrame bb_2s45) -- `não resolve problema de rotação`
+
+-- Envelpe para posicionamento `ìmcompleto !`
+-- Outro uso para o envelope é a capacidade posicionar um diagrama ao lado de outro
+def h₁ : Float^[2] := ⊞[1,1]
+def position := (envelope (scale * circleₚ) h₁) + (envelope (circleₚ) h₁)
+/- A ideia é que ao saber o limite ao qual d₁ (um diagrama) se estende em uma direção, e o limite
+ao qual d₂ se estende na direção oposta a inicial, sabemos onde desenhar nosso segundo diagrama
+-/
+#eval position
+#html drawsvg ( (scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate ⊞[ position , 0 ]) * circleₚ))
+def diagrama₁ := (scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate ⊞[ position ,0]) * circleₚ)
+def bb_d := boundingBoxPrims diagrama₁
+#html drawsvg (diagrama₁) (BoundingBox.toFrame bb_d)
 
 /- Translação em 𝕋 Mark
 Em FreeMonad, temos:
