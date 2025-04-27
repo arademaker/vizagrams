@@ -237,18 +237,36 @@ def bb_2s := boundingBoxPrims twoSquares
 def bb_2s45 := boundingBoxPrims (g_45 * twoSquares)
 #html drawsvg (g_45 * twoSquares) (BoundingBox.toFrame bb_2s45) -- `não resolve problema de rotação`
 
--- Envelpe para posicionamento `ìmcompleto !`
 -- Outro uso para o envelope é a capacidade posicionar um diagrama ao lado de outro
-def h₁ : Float^[2] := ⊞[1,1]
-def position := (envelope (scale * circleₚ) h₁) + (envelope (circleₚ) h₁)
-/- A ideia é que ao saber o limite ao qual d₁ (um diagrama) se estende em uma direção, e o limite
-ao qual d₂ se estende na direção oposta a inicial, sabemos onde desenhar nosso segundo diagrama
--/
+def h₁ : Float^[2] := GeometricTransformation.normalize ⊞[0,10]
+
+-- Embora a função envelope já normalize os vetores, a translação tem de usar o vetor normalizado
+def limite_d₁ : Float := envelope (scale * circleₚ) h₁
+-- Calculamos o quanto o primeiro diagrama ( O que está fixo ) se estende na direção h₁
+def limite_d₂ : Float := envelope (circleₚ) (-h₁)
+-- Calculamos o quanto o segundo diagrama ( O que desejamos posicionar ) se estende na direção oposta a h₁
+def offset_h₁ : Float := limite_d₁ + limite_d₂
+/-
+Para garantir que D₂ fique “colado” em D₁ sem sobreposição, basta deslocá-lo em v por uma distância igual a
+Editar
+offset = d1 + d2
+Assim, a face mais próxima de D₂ (na direção –v) encosta exatamente na face mais avançada de D₁ (na direção v).-/
+def position := offset_h₁ * h₁
+
 #eval position
-#html drawsvg ( (scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate ⊞[ position , 0 ]) * circleₚ))
-def diagrama₁ := (scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate ⊞[ position ,0]) * circleₚ)
+#html drawsvg ( (scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate position) * circleₚ))
+def diagrama₁ := ((scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate position) * circleₚ))
+#check diagrama₁
+#eval diagrama₁
 def bb_d := boundingBoxPrims diagrama₁
 #html drawsvg (diagrama₁) (BoundingBox.toFrame bb_d)
+
+/- # Desenvolvimento: Posicionamento por envelope
+↑ ← → ↓
+-/
+def circleₚpositioned := envelopePositionPrim circleₚ ⊞[1,1] circleₚ
+#html drawsvg ( circleₚ ⊕ circleₚpositioned )
+
 
 /- Translação em 𝕋 Mark
 Em FreeMonad, temos:

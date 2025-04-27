@@ -39,7 +39,6 @@ def primToElem (p : Prim) (fr : Frame) : Element fr :=
   , strokeWidth := styleToSize p.s.strokeWidth fr
   }
 
-
 def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
   let svg : ProofWidgets.Svg fr := { elements := Array.map (λx => primToElem x fr) a}
   svg.toHtml
@@ -60,11 +59,16 @@ def NewLine ( l₁ l₂  : Float^[2] ) ( st : Style := {strokeColor := Color.mk 
   {geom := line , s := st}
 
 def BoundingBox.toFrame (bb : BoundingBox) : Frame :=
+  let dx := bb.upper[0] - bb.lower[0]
+  let dy := bb.upper[1] - bb.lower[1]
+  let aspect := frame.height / frame.width
+  let xSize' := max dx (dy / aspect)
   { frame with
     xmin  := bb.lower[0],
     ymin  := bb.lower[1],
-    xSize := bb.upper[0] - bb.lower[0]
-  }
+    xSize := xSize' }
+
+
 
 
 end VizBackend

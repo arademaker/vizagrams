@@ -79,7 +79,6 @@ structure BoundingBox where
   lower : Float^[2]  -- canto inferior‐esquerdo
   upper : Float^[2]  -- canto superior‐direito
 
-
 def boundingBox (g : Geom) : BoundingBox :=
   let ex₁ := envelope g (⊞[1.0, 0.0])
   let ex₂ := envelope g (⊞[-1.0, 0.0])
@@ -101,5 +100,27 @@ def boundingBoxGroup (gs : Array Geom) : BoundingBox :=
     gs.foldl (fun acc g => acc.union (boundingBox g)) firstBB
   else
     { lower := ⊞[0.0, 0.0], upper := ⊞[0.0, 0.0] }
+
+def envelopePosition (g₁ : Geom) ( v : Float^[2] ) ( g₂ : Geom ) : Geom :=
+  let v₁ := normalize v
+  let offset := (envelope g₁ v₁) + (envelope g₂ (-v₁))
+  let position := offset * v₁
+  GeometricTransformation.G.translate position * g₂
+
+/-- Coloca `g₂` à direita de `g₁`, alinhando pela direção (1,0). -/
+def hStackRight (g₁ g₂ : Geom) : Geom :=
+  envelopePosition g₁ ⊞[1,0] g₂
+
+/-- Coloca `g₂` à esquerda de `g₁`, alinhando pela direção (-1,0). -/
+def hStackLeft (g₁ g₂ : Geom) : Geom :=
+  envelopePosition g₁ ⊞[-1,0] g₂
+
+/-- Coloca `g₂` acima de `g₁`, alinhando pela direção (0,1). -/
+def vStackUp (g₁ g₂ : Geom) : Geom :=
+  envelopePosition g₁ ⊞[0,1] g₂
+
+/-- Coloca `g₂` abaixo de `g₁`, alinhando pela direção (0,-1). -/
+def vStackDown (g₁ g₂ : Geom) : Geom :=
+  envelopePosition g₁ ⊞[0,-1] g₂
 
 end GeometricPrimitive

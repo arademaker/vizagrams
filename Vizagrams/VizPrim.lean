@@ -77,4 +77,8 @@ def boundingBoxPrims (ps : Array Prim) : BoundingBox :=
     -- Array vazio: BB degenerado na origem
     { lower := ⊞[0.0,0.0], upper := ⊞[0.0,0.0] }
 
+def envelopePositionPrim (p₁ : Prim) (v : Float^[2]) (p₂ : Prim) : Prim :=
+  let g := envelopePosition p₁.geom v p₂.geom
+  { geom := g , s := p₂.s : Prim}
+
 end GraphicalPrimitive
