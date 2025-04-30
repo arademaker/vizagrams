@@ -68,7 +68,4 @@ def BoundingBox.toFrame (bb : BoundingBox) : Frame :=
     ymin  := bb.lower[1],
     xSize := xSize' }
 
-
-
-
 end VizBackend

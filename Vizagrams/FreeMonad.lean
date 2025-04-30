@@ -103,4 +103,40 @@ instance : HAdd Mark (𝕋 Mark) (𝕋 Mark) where
 instance : HAdd (𝕋 Mark) Mark (𝕋 Mark) where
   hAdd t m := 𝕋.comp t (𝕋.pure m)
 
+def boundingBox𝕋 (t : 𝕋 Mark) : GeometricPrimitive.BoundingBox :=
+  boundingBoxPrims (flat t)
+
+def envelopePositionMarks (𝕄₁ : 𝕋 Mark) ( v : Float^[2]) (𝕄₂ : 𝕋 Mark) (gap : Float := 0): 𝕋 Mark :=
+  let 𝕞₁ := flat 𝕄₁
+  let 𝕞₂ := flat 𝕄₂
+  let v₁ := normalize v
+  let offset := (envelopeArray 𝕞₁ v₁) + (envelopeArray 𝕞₂ (-v₁)) + gap
+  let position := offset * v₁
+  let h : H := { s := {} , g := G.translate position }
+  h * 𝕄₂
+
+/-- Coloca `p₂` à direita do array `A`, alinhando pela direção (1,0). -/
+def hStackRightMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelopePositionMarks 𝕄₁ ⊞[1,0] 𝕄₂ gap)
+
+/-- Coloca `p₂` à direita do array `A`, alinhando pela direção (1,0). -/
+def hStackLeftMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelopePositionMarks 𝕄₁ ⊞[-1,0] 𝕄₂ gap)
+
+def vStackUpMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelopePositionMarks 𝕄₁ ⊞[0,1] 𝕄₂ gap)
+
+def vStackDownMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelopePositionMarks 𝕄₁ ⊞[0,-1] 𝕄₂ gap)
+
+infixr:70 " → " => hStackRightMarks
+infixr:70 " ← " => hStackLeftMarks
+infixr:70 " ↑ " => vStackUpMarks
+infixr:70 " ↓ " => vStackDownMarks
+
+notation:70 A " →[" g "] " B => hStackRightMarks A B g
+notation:70 A " ←[" g "] " B => hStackLeftMarks  A B g
+notation:70 A " ↑[" g "] " B => vStackUpMarks    A B g
+notation:70 A " ↓[" g "] " B => vStackDownMarks  A B g
+
 end FreeMonad

@@ -224,6 +224,7 @@ a linha de separação ( Reta que divide o espaço em dois, um contendo o diagra
 #eval (envelope square₀ ⊞[1,1])
 -- Para calcular o BoundingBox de um diagram, basta calcular o envelope em todas as direções
 def BoundingBox_square₀ := boundingBoxPrim square₀
+#check BoundingBox_square₀
 #html drawsvg square₀ (BoundingBox.toFrame BoundingBox_square₀ )
 -- Vemos que o boundingbox de um square é ele próprio
 
@@ -325,3 +326,82 @@ structure H where -- Tranformações Gráficas
 
 Isso rege as transformações em objetos do tipo 𝕋 Mark
 -/
+
+-- Vamos voltar a olhar para os objetos do tipo 𝕋 Mark
+#check 𝕋circle
+#html draw 𝕋circle
+
+-- Como aplicar uma transformação em 𝕋circle ?
+def 𝕋translation (x : Float^[2]) : FreeMonad.H := { s := {} , g := GeometricTransformation.G.translate x}
+def x : Float^[2]:= ⊞[2,0]
+#html draw ( 𝕋translation x * 𝕋circle )
+#check ( 𝕋translation x * 𝕋circle )
+/- # O que estamos fazendo ?
+Intuitivamente, compor marcas é como criar uma arvore
+inicialmente temos:
+
+        circle
+
+Mas após a operação 𝕋translation
+
+    H
+      \
+        circle
+
+
+def eval (t : FreeMonad.𝕋 Mark) : Array Prim :=
+  FreeMonad.algθ (FreeMonad.𝕋.map Mark.θ t)
+
+#eval eval ( 𝕋translation x * 𝕋circle )
+-/
+def twoCircles : FreeMonad.𝕋 Mark := 𝕋circle + ( 𝕋translation x * 𝕋circle )
+#html draw twoCircles
+/- # Arvore de twoCircles
+
+      𝕋.comp
+    /        \
+𝕋circle     𝕋.act H
+                \
+              𝕋circle
+-/
+-- Da mesma forma, podemos verificar as outras transformações geométricas
+def 𝕋rotate (y : Float) : FreeMonad.H := { s := {} , g := GeometricTransformation.G.rotate y}
+def 𝕋scale (z : Float) : FreeMonad.H := { s := {} , g := GeometricTransformation.G.scale z}
+
+def 𝕋square : FreeMonad.𝕋 Mark := square₀
+
+open SciLean Scalar RealScalar in
+#html draw ( 𝕋rotate (π/4) * 𝕋square)
+#html draw (𝕋scale 0.3 * 𝕋circle)
+
+-- Vemos também transformações de estilo
+/- # Transformações de estilo em Marks
+Aqui ainda utilizamos
+instance : Mul H where
+  mul x y := H.mk (Style.comp x.s y.s) ( x.g )
+`Style.comp` para combinar os estilos, portanto permanece o rightOption
+-/
+def 𝕋style (w : Sty.Style) : FreeMonad.H := { s := w , g := GeometricTransformation.G.scale 1}
+def myStyle : Sty.Style := {strokeColor := Color.mk 0 0 1 , fillColor := Color.mk 1 1 0}
+
+#html draw (𝕋style borderToblue * 𝕋square)
+#html draw (𝕋style borderToblue * 𝕋style bigborder * 𝕋square)
+
+/- # Envelopes e BoundingBox -/
+def blueBorderSquare : FreeMonad.𝕋 Mark := (𝕋style borderToblue * 𝕋style bigborder * 𝕋square)
+
+/- Da mesma forma que em Prim e Array Prim, podemos utilizar uma função para calcular o
+boundingbox e então converter para frame -/
+def bb_m₁ := FreeMonad.boundingBox𝕋 blueBorderSquare
+def bb_m₂ := FreeMonad.boundingBox𝕋 twoCircles
+#html draw blueBorderSquare (BoundingBox.toFrame bb_m₁)
+#html draw twoCircles (BoundingBox.toFrame bb_m₂)
+
+/- Também temos os posicionamentos por envelope -/
+#html draw ( twoCircles + FreeMonad.envelopePositionMarks twoCircles ⊞[0,1] twoCircles)
+#html draw (twoCircles → twoCircles ↑ twoCircles )
+#html draw (twoCircles ↑ 𝕋square)
+
+-- Posicionando com espaçamento
+def bb_m₃ := FreeMonad.boundingBox𝕋 ( twoCircles ↑[0.5] twoCircles)
+#html draw ( twoCircles ↑[0.5] twoCircles) (BoundingBox.toFrame bb_m₃)
