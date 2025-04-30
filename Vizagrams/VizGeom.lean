@@ -101,11 +101,12 @@ def boundingBoxGroup (gs : Array Geom) : BoundingBox :=
   else
     { lower := ⊞[0.0, 0.0], upper := ⊞[0.0, 0.0] }
 
-def envelopePosition (g₁ : Geom) ( v : Float^[2] ) ( g₂ : Geom ) : Geom :=
+def envelopePosition (g₁ : Geom) ( v : Float^[2] ) ( g₂ : Geom ) (gap : Float := 0): Geom :=
   let v₁ := normalize v
-  let offset := (envelope g₁ v₁) + (envelope g₂ (-v₁))
+  let offset := (envelope g₁ v₁) + (envelope g₂ (-v₁)) + gap
   let position := offset * v₁
   GeometricTransformation.G.translate position * g₂
+
 
 /-- Coloca `g₂` à direita de `g₁`, alinhando pela direção (1,0). -/
 def hStackRight (g₁ g₂ : Geom) : Geom :=
@@ -122,5 +123,10 @@ def vStackUp (g₁ g₂ : Geom) : Geom :=
 /-- Coloca `g₂` abaixo de `g₁`, alinhando pela direção (0,-1). -/
 def vStackDown (g₁ g₂ : Geom) : Geom :=
   envelopePosition g₁ ⊞[0,-1] g₂
+
+def centerGeom (g : Geom) : Geom :=
+  let dx := (envelope g (⊞[1,0]) - envelope g (⊞[-1,0])) / 2
+  let dy := (envelope g (⊞[0,1]) - envelope g (⊞[0,-1])) / 2
+  G.translate (⊞[-dx, -dy]) * g
 
 end GeometricPrimitive

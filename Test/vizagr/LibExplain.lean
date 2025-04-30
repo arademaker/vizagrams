@@ -149,7 +149,7 @@ open SciLean Scalar RealScalar in
 def g_45 : GeometricTransformation.G := GeometricTransformation.G.rotate (π/4)
 
 -- Vamos precisar definir um novo objeto onde possamos ver os efeitos de rotação
-def square₀ : Prim := NewPolygon #[⊞[0,0],⊞[1,0],⊞[1,1],⊞[0,1]]
+def square₀ : Prim := NewPolygon #[⊞[0.7,0.7],⊞[-0.7,0.7],⊞[-0.7,-0.7],⊞[0.7,-0.7]]
 #html drawsvg square₀
 #check g_45 * square₀ -- g_45 * square₀ : Prim
 
@@ -267,6 +267,55 @@ def bb_d := boundingBoxPrims diagrama₁
 def circleₚpositioned := envelopePositionPrim circleₚ ⊞[1,1] circleₚ
 #html drawsvg ( circleₚ ⊕ circleₚpositioned )
 
+#html drawsvg ( circleₚ → circleₚ → circleₚ )
+#html drawsvg ( circleₚ → circleₚ ↑ square₀)
+-- Também podemos posicionar objetos com as operações ↑ ↓ → ← adicionando um espaçamento
+#html drawsvg ( circleₚ →[0.5] circleₚ →[0.5] circleₚ )
+
+def stackCircles : Nat → Float → Array Prim
+| 0,      _   => #[]                         -- zero círculos
+| Nat.succ n, gap =>
+  let prev := stackCircles n gap
+  if prev.isEmpty then
+    -- primeiro círculo
+    #[circleₚ]
+  else
+    -- empilha mais um após o que já existe
+    prev →[gap] #[circleₚ]
+
+-- EXEMPLOS
+
+#html drawsvg (circleₚ →[0.5] circleₚ →[0.5] circleₚ)
+-- exatamente três círculos com gap = 0.5
+
+def d := stackCircles 5 0.5   -- cinco círculos em fila, gap = 0.5
+#html drawsvg d
+
+-- 1) Constantes geométricas do triângulo equilátero de lado 1
+def h : Float :=  (3 / 2 : Float).sqrt
+
+-- 2) Triângulo-base como Prim
+def triₚ : Prim := NewPolygon #[⊞[0,0], ⊞[1,0], ⊞[0.5,h]]
+
+/--
+  Recursão que, para n = 0, retorna o triângulo único;
+  para n+1,k produz três cópias de ordem n escaladas a ½,
+  deslocadas para (0,0), (0.5,0) e (0.25,h/2).
+-/
+def sierpinskiPrims : Nat → Array Prim
+| 0   => #[triₚ]
+| n+1 =>
+  let prev := sierpinskiPrims n
+  -- escala tudo em 0.5
+  let scaled := prev.map (fun p => { geom := GeometricTransformation.G.scale 0.5 * p.geom, s := p.s })
+  -- três posições
+  let t1 := scaled
+  let t2 := scaled.map (fun p => { geom := GeometricTransformation.G.translate ⊞[0.5,0]  * p.geom, s := p.s })
+  let t3 := scaled.map (fun p => { geom := GeometricTransformation.G.translate ⊞[0.25,h/2] * p.geom, s := p.s })
+  -- concatena
+  t1 ++ t2 ++ t3
+
+#html drawsvg (sierpinskiPrims 5) (BoundingBox.toFrame (boundingBoxPrims (sierpinskiPrims 5)))
 
 /- Translação em 𝕋 Mark
 Em FreeMonad, temos:
