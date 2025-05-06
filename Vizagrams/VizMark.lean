@@ -8,20 +8,20 @@ open GraphicalPrimitive
 set_option autoImplicit true
 
 namespace GraphicalMark
-
-class MarkInterface (a : Type) where
+universe u
+class MarkInterface (a : Type u) where
   θ : a -> Array Prim
 
 structure Mark where
-  {T : Type}
+  {T : Type u}
   [inst : MarkInterface T]
-  [strg : ToString T]
+  --[strg : ToString T]
   val : T
 
 def Mark.θ : Mark → Array Prim := fun m => m.inst.θ m.val
 
 instance : ToString Mark where
-  toString p := @ToString.toString p.T p.strg p.val
+  toString p := s!"MArk" --@ToString.toString p.T p.strg p.val
 
 instance : MarkInterface Prim where
   θ p := #[p]

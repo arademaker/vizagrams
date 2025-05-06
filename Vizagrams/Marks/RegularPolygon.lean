@@ -12,6 +12,7 @@ open ProofWidgets Svg
 
 set_option diagnostics true
 set_default_scalar Float
+
 /-
 structure RegularPolygon where
  n : Float -- Número de lados

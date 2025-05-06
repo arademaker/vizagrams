@@ -22,11 +22,14 @@ inductive F (α : Type) where
   | act : H → α → F α
 --deriving Repr, BEq
 
+#check (F.comp 2 3 : F Nat)
+
 instance : Functor F where
   map f a := match a with
     | F.comp x y => F.comp (f x) (f y)
     | F.act h x => F.act h (f x)
 
+#check Functor.map (· + 3) (F.comp 2 3 : F Nat) 
 /-
 instance : Mul H where
   mul x y := H.mk (x.g * y.g)

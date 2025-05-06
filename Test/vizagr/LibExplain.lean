@@ -405,3 +405,105 @@ def bb_m₂ := FreeMonad.boundingBox𝕋 twoCircles
 -- Posicionando com espaçamento
 def bb_m₃ := FreeMonad.boundingBox𝕋 ( twoCircles ↑[0.5] twoCircles)
 #html draw ( twoCircles ↑[0.5] twoCircles) (BoundingBox.toFrame bb_m₃)
+
+/- # Criando Marks
+Uma funcionalidade bastante útil e agradável é a capacidade de criar novos objetos gráficos.
+Para isso podemos observar o próprio código de Mark
+#eval !![1,2;3,4] + !![1,2;3,4]
+class MarkInterface (a : Type) where
+  θ : a -> Array Prim
+
+structure Mark where
+  {T : Type}
+  [inst : MarkInterface T]
+  [strg : ToString T]
+  val : T
+
+Uma Mark é um tipo que instancia MarkInterface
+-/
+
+-- Aqui definimos um Type
+structure sierpinski where
+  n : Nat
+
+instance : ToString sierpinski where
+  toString s := s!" ssierpinski {s.n}"
+-- Agora criamos uma instancia de MarkInterface
+instance : MarkInterface sierpinski where
+  θ s := sierpinskiPrims s.n
+
+def Sierpinski₃ : sierpinski := {n := 3}
+
+instance : Coe sierpinski Mark where
+  coe m := Mark.mk m
+
+#html draw Sierpinski₃
+
+-- # Poligonos Regulares
+
+structure RegularPolygon where
+  center : Float^[2] := ⊞[0,0]
+  sides : Nat
+  size : Float
+  h : sides >= 3 := by decide
+  style : Sty.Style
+
+instance : ToString RegularPolygon where
+  toString p := s!"Regular Polygon with {p.sides} sides of size {p.size}"
+
+-- Agora precisamos implementar MarkInterface
+def findPointbyAngle (x : Float) : Float^[2] :=
+  ⊞[Float.cos x , Float.sin x]
+
+def create_list (n : ℕ) : Array ℕ :=
+  Array.range n |>.map (λ x => x + 1)
+
+def multiply_by_scalar (lst : Array ℕ) (scalar : Float) : Array Float :=
+  lst.map (λ x => ↑x * scalar)
+
+open SciLean Scalar RealScalar in
+def regToPoly (p : RegularPolygon) : Array (Float^[2]) :=
+  let passo : Float := ( 2 * π  ) / (p.sides)
+  let listn : Array ℕ := create_list (p.sides)
+  let Arr := multiply_by_scalar listn passo
+  Array.map findPointbyAngle Arr
+
+instance : MarkInterface RegularPolygon where
+  θ h := NewPolygon (regToPoly h) h.style
+
+instance : Coe RegularPolygon Mark where
+  coe m := Mark.mk m
+
+def triangle : RegularPolygon := {sides := 3 , size := 1, style := Toblue }
+def triangleₘ : FreeMonad.𝕋 Mark := triangle
+#check (triangle : FreeMonad.𝕋 Mark)
+open SciLean Scalar RealScalar in
+#html draw (𝕋rotate (π/4) * triangleₘ)
+#html draw (𝕋style redborder * (𝕋style bigborder * triangleₘ))
+
+-- Podemos criar Marks usando Marks
+
+structure Arrow where
+  p₁ : Float^[2]
+  p₂ : Float^[2]
+  tip : Mark
+  style : Sty.Style
+
+instance : ToString Arrow where
+  toString a := s!"Arrow"
+
+def ArrowLine (α : Arrow) : Prim := NewLine α.p₁ α.p₂ α.style
+
+instance : MarkInterface Arrow where
+  θ α :=
+    let c₁ : Mark := ArrowLine α
+    let c₂ :  Mark := α.tip
+    let m : FreeMonad.𝕋 Mark := FreeMonad.envelopePositionMarks c₁ (α.p₂ - α.p₁) c₂
+    FreeMonad.flat m
+
+instance : Coe Arrow Mark where
+  coe m := Mark.mk m
+
+def Arrow₁ : Arrow := {p₁ := ⊞[0,0], p₂ := ⊞[1,0], tip := triangle, style := bigborder.comp borderToblue}
+#eval Arrow₁.p₂ - Arrow₁.p₁
+#html draw Arrow₁
