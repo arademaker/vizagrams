@@ -1,6 +1,5 @@
 import Mathlib.Data.Matrix.Basic
 import Mathlib.Data.Matrix.Notation
---import Mathlib.Data.Matrix.Mul
 
 open Matrix Fin
 abbrev Vec2 := Fin 2 → Float
@@ -63,11 +62,50 @@ class AffineMapClass (G : Type) where
 structure AffineMat where
   A : Mat2
   b : Vec2
-
+deriving Repr
+-- # Produto de Matrizes e Vetores em Float²
 def mulVec (A : Mat2) (v : Vec2) : Vec2 :=
   fun i => (A i 0) * v 0 + (A i 1) * v 1
+
 def matMul (A B : Mat2) : Mat2 :=
   fun i j => A i 0 * B 0 j + A i 1 * B 1 j
 
+def nullVec2 : Vec2 := ![0,0]
+
 #eval mulVec M_Float v₁
 #eval matMul M_Float M_Float
+
+/- # Instanciando AffineMapClass para AffineMat
+Seja f : V² → V² uma trasformação linear tal que f(x) := Ax + b
+portanto instanciamos o campo `eval f x` como `Ax + b`
+Agora seja g : V² → V² tal que g(x) := Cx + d, temos que
+(f ∘ g)(x) = f(g(x)) = f( Cx + d ) = A ( Cx + d ) + b = (A·C)x + (A · d + b)
+-/
+instance : AffineMapClass AffineMat where
+  eval f x := mulVec f.A x + f.b
+  compose f g := { A := matMul f.A g.A , b := (mulVec f.A g.b) + f.b }
+
+infixr:70 " ⬝ " => AffineMapClass.eval
+infixr:70 " ∘ " => AffineMapClass.compose
+
+def I2 : Mat2 := !![1, 0; 0, 1]
+
+def translate (t : Vec2) : AffineMat :=
+  { A := I2, b := t }
+
+def scale (s : Float) : AffineMat :=
+  { A := !![s, 0; 0, s], b := ![0.0, 0.0] }
+
+def rotate (θ : Float) : AffineMat :=
+  let c := Float.cos θ
+  let s := Float.sin θ
+  { A := !![c, -s; s, c], b := ![0.0, 0.0] }
+
+def Float.pi : Float := 3.141592653589793
+
+private def T := translate ![2.0, 0.0]
+private def R := rotate (Float.pi / 2)
+private def S := scale 2.0
+private def v : Vec2 := ![1.0, 1.0]
+
+#eval (T ∘ R ∘ S) ⬝ v
