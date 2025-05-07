@@ -7,12 +7,19 @@ set_default_scalar Float
 
 namespace GeometricTransformation
 
+instance : HMul Float (Float^[2]) (Float^[2]) where
+  hMul x y := ⊞[x * y[0], x * y[1]]
+
 -- Auxiliar function for Vector Norm
 def vecnorm (v : Float^[n]) : Float :=
   (v.foldl (λ acc x => acc + x*x) 0.0).sqrt
 
-instance : HMul Float (Float^[2]) (Float^[2]) where
-  hMul x y := ⊞[x * y[0], x * y[1]]
+def normalize (v : Float^[2]) : Float^[2] :=
+  let n := vecnorm v
+  if n = 0 then v else (1 / n) * v
+
+#eval ⊞[1.0,2.0].dot ⊞[2.0,1.0]
+
 instance : HMul (Float^[2]) Float (Float^[2]) where
   hMul y x := ⊞[x * y[0], x * y[1]]
 
