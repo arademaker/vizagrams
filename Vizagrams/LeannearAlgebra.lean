@@ -1,5 +1,6 @@
 import Mathlib.Data.Matrix.Basic
 import Mathlib.Data.Matrix.Notation
+--import Mathlib.Data.Matrix.Mul
 
 open Matrix Fin
 abbrev Vec2 := Fin 2 → Float
@@ -37,12 +38,36 @@ def normalize (v : Vec2) : Vec2 :=
 
 #eval normalize v₁
 
+/- # Mesma discursão a respeito de FreeMonad 𝕋
+Em `transformation.lean` é definido o seguinte type
 
+structure G where
+  A : Float^[2,2]
+  b : Float^[2]
 
+E então são criados os
 
-def A : Matrix (Fin 2) (Fin 2) ℕ :=
-  ![![1, 2],
-    ![3, 4]]
+def G.eval (f : G) (x : Float^[2]) := f.A * x + f.b
+def G.comp (f g : G) : G :=
+  { A := f.A * g.A, b := f.A * g.b + f.b }
 
-#eval A 0 1      -- resultado: 2
-#eval (Aᵀ) 1 0   -- resultado: 2 (Aᵀ é transposta)
+Entretanto, aqui optei por definir uma class `AffineMapClass` pois assim é possível ver
+uma maior relação com Category Theory (CT).
+𝓒 = ⟨ Vec2 , G em AffineMapClass ⟩
+-/
+class AffineMapClass (G : Type) where
+  eval : G → Vec2 → Vec2
+  compose : G → G → G
+
+-- Aqui definimos um AffineMat, isto é, um tipo para representar x ↦ Ax + B
+structure AffineMat where
+  A : Mat2
+  b : Vec2
+
+def mulVec (A : Mat2) (v : Vec2) : Vec2 :=
+  fun i => (A i 0) * v 0 + (A i 1) * v 1
+def matMul (A B : Mat2) : Mat2 :=
+  fun i j => A i 0 * B 0 j + A i 1 * B 1 j
+
+#eval mulVec M_Float v₁
+#eval matMul M_Float M_Float
