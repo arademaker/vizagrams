@@ -1,9 +1,11 @@
 import Lake
 open Lake DSL
 
-require scilean from git
-  "https://github.com/lecopivo/SciLean.git"
+-- Adiciona Mathlib como dependência via git
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4" @ "master"
 
+-- Configura o pacote principal
 package "vizagrams" where
   -- add package configuration options here
 
