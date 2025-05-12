@@ -1,19 +1,20 @@
-import Vizagrams.VizPrim
+--import Vizagrams.VizPrim
 import ProofWidgets.Data.Svg
 import Vizagrams.Style
-import Vizagrams.VizMark
+--import Vizagrams.VizMark
+import Vizagrams.FreeMonad
 
 open ProofWidgets Svg
 open GeometricPrimitive
 open GraphicalPrimitive
 open Sty
-
+open FreeMonad
 namespace VizBackend
 
 private def frame : Frame where
   xmin   := -2
   ymin   := -2
-  xSize  := 4
+  xSize  := 10
   width  := 400
   height := 400
 
@@ -38,10 +39,12 @@ def primToElem (p : Prim) (fr : Frame) : Element fr :=
   , strokeWidth := styleToSize p.s.strokeWidth fr
   }
 
-
 def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
   let svg : ProofWidgets.Svg fr := { elements := Array.map (λx => primToElem x fr) a}
   svg.toHtml
+
+def draw (t : 𝕋 GraphicalMark.Mark) (fr : Frame := frame) : ProofWidgets.Html :=
+  drawsvg (flat t ) fr
 
 def NewCircle (r : Float) (c : Float^[2]) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
   let rc := Geom.circle r c
@@ -50,5 +53,19 @@ def NewCircle (r : Float) (c : Float^[2]) (st : Style := {fillColor := Color.mk 
 def NewPolygon (pts : Array (Float^[2])) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
   let p := Geom.polygon pts
   {geom := p , s := st}
+
+def NewLine ( l₁ l₂  : Float^[2] ) ( st : Style := {strokeColor := Color.mk 0 0 0} ): Prim :=
+  let line := Geom.line l₁ l₂
+  {geom := line , s := st}
+
+def BoundingBox.toFrame (bb : BoundingBox) : Frame :=
+  let dx := bb.upper[0] - bb.lower[0]
+  let dy := bb.upper[1] - bb.lower[1]
+  let aspect := frame.height / frame.width
+  let xSize' := max dx (dy / aspect)
+  { frame with
+    xmin  := bb.lower[0],
+    ymin  := bb.lower[1],
+    xSize := xSize' }
 
 end VizBackend
