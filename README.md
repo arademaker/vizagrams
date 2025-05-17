@@ -1,8 +1,18 @@
-# vizagrams
+# Vizagrams 
 
-## Organização 
+Vizagrams is a visualization framework that integrates **diagramming**
+and **data visualization**, with the goal of providing high
+expressiveness with intuitive usability.
 
-Estão presentes duas abordagems:
-A primeira ocorre da re-modularização dos arquivos `Prim.lean` e `Mark.lean` para os arquivos `Primitivesorg.lean`, `Markorg.lean` e `head.lean`. Na pasta Test há exemplos de uso dessa abordagem.
+The framework implements a diagramming DSL together with a
+visualization grammar, thus allowing users to create diagrams by
+combining and transforming plots, as well as to create new
+visualization specifications using diagram construction operations.
 
-A segunda considera uma abordagem de Primitiva sendo a composição de uma Primitiva Geométrica a uma Primitiva de Estilo. Esta abordagem se encontra nos arquivos precedidade de `Viz` e exemplos estão na pasta Test/vizagr
+For the original Julia implementation, visit:
+
+https://github.com/davibarreira/Vizagrams.jl
+
+This Lean implementation is still under development.
+
+
