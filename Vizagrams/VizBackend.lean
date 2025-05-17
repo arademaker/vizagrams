@@ -1,7 +1,7 @@
 --import Vizagrams.VizPrim
 import ProofWidgets.Data.Svg
 import Vizagrams.Style
---import Vizagrams.VizMark
+import Vizagrams.Envelope
 import Vizagrams.FreeMonad
 
 open ProofWidgets Svg
@@ -18,25 +18,38 @@ private def frame : Frame where
   width  := 400
   height := 400
 
-def vecToPoint (x : Float^[2]) (fr : Frame) : Point fr :=
-  Point.abs x[0] x[1]
+def vecToPoint (x : Vec2) (fr : Frame) : Point fr :=
+  Point.abs (x 0) (x 1)
 
-def pointToVec {fr : Frame} (p : Point fr) : Float^[2] :=
+def pointToVec {fr : Frame} (p : Point fr) : Vec2 :=
   match Point.toAbsolute p with
-    | (x, y) => ⊞[x,y]
+    | (x, y) => ![x,y]
 
 def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
   match g with
-  | Geom.line src trg => Shape.line (vecToPoint src fr) (vecToPoint trg fr)
-  | Geom.circle r c => Shape.circle (vecToPoint c fr) (Size.abs r)
-  | Geom.polyline points => Shape.polyline (points.map fun p => vecToPoint p fr)
-  | Geom.polygon points => Shape.polygon (points.map fun p => vecToPoint p fr)
+  | .line src trg =>
+      Shape.line (vecToPoint src fr) (vecToPoint trg fr)
+  | .circle r c =>
+      Shape.circle (vecToPoint c fr) (Size.abs r)
+  | .ellipse rx ry c =>
+      Shape.ellipse (vecToPoint c fr) (Size.abs rx) (Size.abs ry)
+  | .rect corner width height =>
+      Shape.rect (vecToPoint corner fr) (Size.abs width) (Size.abs height)
+  | .polyline points =>
+      Shape.polyline (points.map (vecToPoint · fr))
+  | .polygon points =>
+      Shape.polygon (points.map (vecToPoint · fr))
+  | .path d =>
+      Shape.path d
+  | .text pos content size =>
+      Shape.text (vecToPoint pos fr) content (Size.abs size)
+
 
 def primToElem (p : Prim) (fr : Frame) : Element fr :=
   { shape := geomToShape p.geom fr
-  , fillColor := p.s.fillColor
-  , strokeColor := p.s.strokeColor
-  , strokeWidth := styleToSize p.s.strokeWidth fr
+  , fillColor := p.style.fillColor
+  , strokeColor := p.style.strokeColor
+  , strokeWidth := styleToSize p.style.strokeWidth fr
   }
 
 def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
@@ -46,26 +59,26 @@ def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
 def draw (t : 𝕋 GraphicalMark.Mark) (fr : Frame := frame) : ProofWidgets.Html :=
   drawsvg (flat t ) fr
 
-def NewCircle (r : Float) (c : Float^[2]) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
+def NewCircle (r : Float) (c : Vec2) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
   let rc := Geom.circle r c
-  {geom := rc, s := st}
+  {geom := rc, style := st}
 
-def NewPolygon (pts : Array (Float^[2])) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
+def NewPolygon (pts : Array (Vec2)) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
   let p := Geom.polygon pts
-  {geom := p , s := st}
+  {geom := p , style := st}
 
-def NewLine ( l₁ l₂  : Float^[2] ) ( st : Style := {strokeColor := Color.mk 0 0 0} ): Prim :=
+def NewLine ( l₁ l₂  : Vec2 ) ( st : Style := {strokeColor := Color.mk 0 0 0} ): Prim :=
   let line := Geom.line l₁ l₂
-  {geom := line , s := st}
+  {geom := line , style := st}
 
-def BoundingBox.toFrame (bb : BoundingBox) : Frame :=
-  let dx := bb.upper[0] - bb.lower[0]
-  let dy := bb.upper[1] - bb.lower[1]
-  let aspect := frame.height / frame.width
+def BoundingBox.toFrame (bb : Envelope.BoundingBox) : Frame :=
+  let dx := (bb.upper 0) - (bb.lower 0)
+  let dy := (bb.upper 1) - (bb.lower 1)
+  let aspect := frame.height.toFloat / frame.width.toFloat
   let xSize' := max dx (dy / aspect)
   { frame with
-    xmin  := bb.lower[0],
-    ymin  := bb.lower[1],
+    xmin  := bb.lower 0,
+    ymin  := bb.lower 1,
     xSize := xSize' }
 
 end VizBackend

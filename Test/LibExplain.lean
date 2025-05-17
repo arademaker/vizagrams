@@ -1,7 +1,5 @@
-import Vizagrams.VizPrim
-import Vizagrams.VizBackend
-import Vizagrams.VizMark
 import Vizagrams.FreeMonad
+import Vizagrams.VizBackend
 
 open GeometricPrimitive
 open VizBackend
@@ -23,10 +21,10 @@ Vamos observar como esses objetos se relacionam
 -/
 
 -- Vamos desenhar um Círculo como uma primitiva
-def circleₚ : Prim := NewCircle 1 ⊞[0,0] -- Utilizamos NewCircle de VizBackend
+def circleₚ : Prim := NewCircle 1 ![0,0] -- Utilizamos NewCircle de VizBackend
 #eval circleₚ
 /-
-{ geom := Geom.circle 1.000000 ⊞[0.000000, 0.000000],
+{ geom := Geom.circle 1.000000 ![0.000000, 0.000000],
   s := Style.mk { strokeColor := none, strokeWidth := none, fillColor := (0.000000, 0.000000, 0.000000) } }
 -/
 -- Vamos verificar que circleₚ pode ser considerado um Array Prim
@@ -35,7 +33,7 @@ def circleₚ : Prim := NewCircle 1 ⊞[0,0] -- Utilizamos NewCircle de VizBacke
 def circleₐ : Array Prim := circleₚ
 #eval circleₐ
 /-
-#[{ geom := Geom.circle 1.000000 ⊞[0.000000, 0.000000],
+#[{ geom := Geom.circle 1.000000 ![0.000000, 0.000000],
     s := Style.mk { strokeColor := none,
                     strokeWidth := none,
                     fillColor := (0.000000, 0.000000, 0.000000) } }]
@@ -105,7 +103,7 @@ operações que temos disponíveis
 -/
 
 -- Translação em Prim
-def t_r₁ : GeometricTransformation.G := GeometricTransformation.G.translate ⊞[3,0] -- três unidade para a direita
+def t_r₁ : Mat2Vec2 := translate ![3,0] -- três unidade para a direita
 
 -- Aplicamos transformações a esquerda do objeto Prim
 #eval t_r₁ * circleₚ
@@ -143,13 +141,10 @@ em Mark retornam um Array Prim
 No final veremos como funcionam as transformações em 𝕋 Mark
 -/
 
--- Rotações
-set_default_scalar Float
-open SciLean Scalar RealScalar in
-def g_45 : GeometricTransformation.G := GeometricTransformation.G.rotate (π/4)
+def g_45 : Mat2Vec2 := rotate (π/4)
 
 -- Vamos precisar definir um novo objeto onde possamos ver os efeitos de rotação
-def square₀ : Prim := NewPolygon #[⊞[0.7,0.7],⊞[-0.7,0.7],⊞[-0.7,-0.7],⊞[0.7,-0.7]]
+def square₀ : Prim := NewPolygon #[![0.7,0.7],![-0.7,0.7],![-0.7,-0.7],![0.7,-0.7]]
 #html drawsvg square₀
 #check g_45 * square₀ -- g_45 * square₀ : Prim
 
@@ -167,13 +162,13 @@ isso ocorre pois o objeto é rotacionado ao redor da origem
 -/
 
 -- Transformação de escala
-def scale : GeometricTransformation.G := GeometricTransformation.G.scale 2
-def bigSquare := scale * square₀
+def scale2 : Mat2Vec2 := scale 2
+def bigSquare := scale2 * square₀
 #html drawsvg bigSquare
-#html drawsvg (scale * twoSquares)
+#html drawsvg (scale2 * twoSquares)
 
 -- Também podemos compor transformações
-#html drawsvg ( scale ∘ g_45 ∘ t_r₁ * square₀ )
+#html drawsvg ( (scale2 ∘ g_45 ∘ t_r₁) * square₀ )
 
 -- Trasformações de estilo
 /- Em `Style.lean` temos
@@ -202,7 +197,7 @@ def rightOption {α : Type} (o1 : Option α) (o2 : Option α) : Option α :=
 Portanto quando tentamos Toblue * bigSquare, nada acontece pois o criamos
 utilizando NewPolygon que pre_seleciona fillColor
 -/
-def newSquare : Prim := {geom := Geom.polygon #[⊞[0,0], ⊞[2,0], ⊞[2,2], ⊞[0,2]] }
+def newSquare : Prim := {geom := Geom.polygon #[![0,0], ![2,0], ![2,2], ![0,2]] , style := {}}
 #eval newSquare
 #html drawsvg newSquare -- Como NewSquare não possui fill, não é possível ver nada
 #html drawsvg ( Toblue * newSquare )
@@ -220,8 +215,9 @@ O que é o envelope ?
 Dado uma direção, o envelope de um diagrama naquela direção é a menor distância entre a origem e
 a linha de separação ( Reta que divide o espaço em dois, um contendo o diagrame e o outro vazio)
 -/
+open Envelope
 #check (square₀ : Geom) -- `instaciei Coe Prim Geom para esse exemplo `
-#eval (envelope square₀ ⊞[1,1])
+#eval (envelope square₀ ![1,1])
 -- Para calcular o BoundingBox de um diagram, basta calcular o envelope em todas as direções
 def BoundingBox_square₀ := boundingBoxPrim square₀
 #check BoundingBox_square₀
@@ -239,10 +235,10 @@ def bb_2s45 := boundingBoxPrims (g_45 * twoSquares)
 #html drawsvg (g_45 * twoSquares) (BoundingBox.toFrame bb_2s45) -- `não resolve problema de rotação`
 
 -- Outro uso para o envelope é a capacidade posicionar um diagrama ao lado de outro
-def h₁ : Float^[2] := GeometricTransformation.normalize ⊞[0,10]
+def h₁ : Vec2 := normalize ![0,10]
 
 -- Embora a função envelope já normalize os vetores, a translação tem de usar o vetor normalizado
-def limite_d₁ : Float := envelope (scale * circleₚ) h₁
+def limite_d₁ : Float := envelope (scale2 * circleₚ) h₁
 -- Calculamos o quanto o primeiro diagrama ( O que está fixo ) se estende na direção h₁
 def limite_d₂ : Float := envelope (circleₚ) (-h₁)
 -- Calculamos o quanto o segundo diagrama ( O que desejamos posicionar ) se estende na direção oposta a h₁
@@ -252,11 +248,11 @@ Para garantir que D₂ fique “colado” em D₁ sem sobreposição, basta desl
 Editar
 offset = d1 + d2
 Assim, a face mais próxima de D₂ (na direção –v) encosta exatamente na face mais avançada de D₁ (na direção v).-/
-def position := offset_h₁ * h₁
+def position := ScalarMul offset_h₁ h₁
 
 #eval position
-#html drawsvg ( (scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate position) * circleₚ))
-def diagrama₁ := ((scale * circleₚ) ⊕ ( (GeometricTransformation.G.translate position) * circleₚ))
+#html drawsvg ( (scale2 * circleₚ) ⊕ ( (translate position) * circleₚ))
+def diagrama₁ := ((scale2 * circleₚ) ⊕ ( (translate position) * circleₚ))
 #check diagrama₁
 #eval diagrama₁
 def bb_d := boundingBoxPrims diagrama₁
@@ -265,7 +261,7 @@ def bb_d := boundingBoxPrims diagrama₁
 /- # Desenvolvimento: Posicionamento por envelope
 ↑ ← → ↓
 -/
-def circleₚpositioned := envelopePositionPrim circleₚ ⊞[1,1] circleₚ
+def circleₚpositioned := envelopePositionPrim circleₚ ![1,1] circleₚ
 #html drawsvg ( circleₚ ⊕ circleₚpositioned )
 
 #html drawsvg ( circleₚ → circleₚ → circleₚ )
@@ -296,7 +292,7 @@ def d := stackCircles 5 0.5   -- cinco círculos em fila, gap = 0.5
 def h : Float :=  (3 / 2 : Float).sqrt
 
 -- 2) Triângulo-base como Prim
-def triₚ : Prim := NewPolygon #[⊞[0,0], ⊞[1,0], ⊞[0.5,h]]
+def triₚ : Prim := NewPolygon #[![0,0], ![1,0], ![0.5,h]]
 
 /--
   Recursão que, para n = 0, retorna o triângulo único;
@@ -308,15 +304,15 @@ def sierpinskiPrims : Nat → Array Prim
 | n+1 =>
   let prev := sierpinskiPrims n
   -- escala tudo em 0.5
-  let scaled := prev.map (fun p => { geom := GeometricTransformation.G.scale 0.5 * p.geom, s := p.s })
+  let scaled := prev.map (fun p => { geom := scale 0.5 * p.geom, style := p.style })
   -- três posições
   let t1 := scaled
-  let t2 := scaled.map (fun p => { geom := GeometricTransformation.G.translate ⊞[0.5,0]  * p.geom, s := p.s })
-  let t3 := scaled.map (fun p => { geom := GeometricTransformation.G.translate ⊞[0.25,h/2] * p.geom, s := p.s })
+  let t2 := scaled.map (fun p => { geom := translate ![0.5,0]  * p.geom, style := p.style })
+  let t3 := scaled.map (fun p => { geom := translate ![0.25,h/2] * p.geom, style := p.style })
   -- concatena
   t1 ++ t2 ++ t3
 
-#html drawsvg (sierpinskiPrims 5) (BoundingBox.toFrame (boundingBoxPrims (sierpinskiPrims 5)))
+#html drawsvg (sierpinskiPrims 4) (BoundingBox.toFrame (boundingBoxPrims (sierpinskiPrims 4)))
 
 /- Translação em 𝕋 Mark
 Em FreeMonad, temos:
@@ -332,8 +328,8 @@ Isso rege as transformações em objetos do tipo 𝕋 Mark
 #html draw 𝕋circle
 
 -- Como aplicar uma transformação em 𝕋circle ?
-def 𝕋translation (x : Float^[2]) : FreeMonad.H := { s := {} , g := GeometricTransformation.G.translate x}
-def x : Float^[2]:= ⊞[2,0]
+def 𝕋translation (x : Vec2) : FreeMonad.ℍ := { s := {} , g := translate x}
+def x : Vec2:= ![2,0]
 #html draw ( 𝕋translation x * 𝕋circle )
 #check ( 𝕋translation x * 𝕋circle )
 /- # O que estamos fazendo ?
@@ -365,12 +361,11 @@ def twoCircles : FreeMonad.𝕋 Mark := 𝕋circle + ( 𝕋translation x * 𝕋c
               𝕋circle
 -/
 -- Da mesma forma, podemos verificar as outras transformações geométricas
-def 𝕋rotate (y : Float) : FreeMonad.H := { s := {} , g := GeometricTransformation.G.rotate y}
-def 𝕋scale (z : Float) : FreeMonad.H := { s := {} , g := GeometricTransformation.G.scale z}
+def 𝕋rotate (y : Float) : FreeMonad.ℍ := { s := {} , g := rotate y}
+def 𝕋scale (z : Float) : FreeMonad.ℍ := { s := {} , g := scale z}
 
 def 𝕋square : FreeMonad.𝕋 Mark := square₀
 
-open SciLean Scalar RealScalar in
 #html draw ( 𝕋rotate (π/4) * 𝕋square)
 #html draw (𝕋scale 0.3 * 𝕋circle)
 
@@ -381,7 +376,7 @@ instance : Mul H where
   mul x y := H.mk (Style.comp x.s y.s) ( x.g )
 `Style.comp` para combinar os estilos, portanto permanece o rightOption
 -/
-def 𝕋style (w : Sty.Style) : FreeMonad.H := { s := w , g := GeometricTransformation.G.scale 1}
+def 𝕋style (w : Sty.Style) : FreeMonad.ℍ := { s := w , g := scale 1}
 def myStyle : Sty.Style := {strokeColor := Color.mk 0 0 1 , fillColor := Color.mk 1 1 0}
 
 #html draw (𝕋style borderToblue * 𝕋square)
@@ -392,18 +387,18 @@ def blueBorderSquare : FreeMonad.𝕋 Mark := (𝕋style borderToblue * 𝕋styl
 
 /- Da mesma forma que em Prim e Array Prim, podemos utilizar uma função para calcular o
 boundingbox e então converter para frame -/
-def bb_m₁ := FreeMonad.boundingBox𝕋 blueBorderSquare
-def bb_m₂ := FreeMonad.boundingBox𝕋 twoCircles
+def bb_m₁ := boundingBox𝕋 blueBorderSquare
+def bb_m₂ := boundingBox𝕋 twoCircles
 #html draw blueBorderSquare (BoundingBox.toFrame bb_m₁)
 #html draw twoCircles (BoundingBox.toFrame bb_m₂)
 
 /- Também temos os posicionamentos por envelope -/
-#html draw ( twoCircles + FreeMonad.envelopePositionMarks twoCircles ⊞[0,1] twoCircles)
+#html draw ( twoCircles + envelopePositionMarks twoCircles ![0,1] twoCircles)
 #html draw (twoCircles → twoCircles ↑ twoCircles )
 #html draw (twoCircles ↑ 𝕋square)
 
 -- Posicionando com espaçamento
-def bb_m₃ := FreeMonad.boundingBox𝕋 ( twoCircles ↑[0.5] twoCircles)
+def bb_m₃ := boundingBox𝕋 ( twoCircles ↑[0.5] twoCircles)
 #html draw ( twoCircles ↑[0.5] twoCircles) (BoundingBox.toFrame bb_m₃)
 
 /- # Criando Marks
@@ -442,7 +437,7 @@ instance : Coe sierpinski Mark where
 -- # Poligonos Regulares
 
 structure RegularPolygon where
-  center : Float^[2] := ⊞[0,0]
+  center : Vec2 := ![0,0]
   sides : Nat
   size : Float
   h : sides >= 3 := by decide
@@ -452,18 +447,17 @@ instance : ToString RegularPolygon where
   toString p := s!"Regular Polygon with {p.sides} sides of size {p.size}"
 
 -- Agora precisamos implementar MarkInterface
-def findPointbyAngle (x : Float) : Float^[2] :=
-  ⊞[Float.cos x , Float.sin x]
+def findPointbyAngle (x : Float) : Vec2 :=
+  ![Float.cos x , Float.sin x]
 
 def create_list (n : ℕ) : Array ℕ :=
   Array.range n |>.map (λ x => x + 1)
 
 def multiply_by_scalar (lst : Array ℕ) (scalar : Float) : Array Float :=
-  lst.map (λ x => ↑x * scalar)
+  lst.map (λ x => ↑x.toFloat * scalar)
 
-open SciLean Scalar RealScalar in
-def regToPoly (p : RegularPolygon) : Array (Float^[2]) :=
-  let passo : Float := ( 2 * π  ) / (p.sides)
+def regToPoly (p : RegularPolygon) : Array (Vec2) :=
+  let passo : Float := ( 2 * π  ) / (p.sides.toFloat)
   let listn : Array ℕ := create_list (p.sides)
   let Arr := multiply_by_scalar listn passo
   Array.map findPointbyAngle Arr
@@ -477,15 +471,14 @@ instance : Coe RegularPolygon Mark where
 def triangle : RegularPolygon := {sides := 3 , size := 1, style := Toblue }
 def triangleₘ : FreeMonad.𝕋 Mark := triangle
 #check (triangle : FreeMonad.𝕋 Mark)
-open SciLean Scalar RealScalar in
 #html draw (𝕋rotate (π/4) * triangleₘ)
 #html draw (𝕋style redborder * (𝕋style bigborder * triangleₘ))
 
 -- Podemos criar Marks usando Marks
 
 structure Arrow where
-  p₁ : Float^[2]
-  p₂ : Float^[2]
+  p₁ : Vec2
+  p₂ : Vec2
   tip : Mark
   style : Sty.Style
 
@@ -498,12 +491,12 @@ instance : MarkInterface Arrow where
   θ α :=
     let c₁ : Mark := ArrowLine α
     let c₂ :  Mark := α.tip
-    let m : FreeMonad.𝕋 Mark := FreeMonad.envelopePositionMarks c₁ (α.p₂ - α.p₁) c₂
+    let m : FreeMonad.𝕋 Mark := envelopePositionMarks c₁ (α.p₂ - α.p₁) c₂
     FreeMonad.flat m
 
 instance : Coe Arrow Mark where
   coe m := Mark.mk m
 
-def Arrow₁ : Arrow := {p₁ := ⊞[0,0], p₂ := ⊞[1,0], tip := triangle, style := bigborder.comp borderToblue}
+def Arrow₁ : Arrow := {p₁ := ![0,0], p₂ := ![1,0], tip := triangle, style := bigborder.comp borderToblue}
 #eval Arrow₁.p₂ - Arrow₁.p₁
 #html draw Arrow₁
