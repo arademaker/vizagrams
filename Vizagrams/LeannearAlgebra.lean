@@ -81,6 +81,7 @@ portanto instanciamos o campo `eval f x` como `Ax + b`
 Agora seja g : V² → V² tal que g(x) := Cx + d, temos que
 (f ∘ g)(x) = f(g(x)) = f( Cx + d ) = A ( Cx + d ) + b = (A·C)x + (A · d + b)
 -/
+
 instance : AffineMapLike Mat2Vec2 Vec2 where
   eval f x := mulVec f.A x + f.b
   compose f g := { A := matMul f.A g.A , b := (mulVec f.A g.b) + f.b }
