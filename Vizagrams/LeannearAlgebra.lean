@@ -43,13 +43,13 @@ def G.eval (f : G) (x : Float^[2]) := f.A * x + f.b
 def G.comp (f g : G) : G :=
   { A := f.A * g.A, b := f.A * g.b + f.b }
 
-Entretanto, aqui optei por definir uma class `AffineMapClass` pois assim é possível ver
+Entretanto, aqui optei por definir uma class `AffineMapLike` pois assim é possível ver
 uma maior relação com Category Theory (CT).
 𝓒 = ⟨ Vec2 , G em AffineMapClass ⟩
 -/
 
-class AffineMapClass (G : Type) where
-  eval : G → Vec2 → Vec2
+class AffineMapLike (G : Type) (V : Type) where
+  eval : G → V → V
   compose : G → G → G
 
 -- Aqui definimos um Mat2Vec2, isto é, um tipo para representar x ↦ Ax + B
@@ -81,12 +81,14 @@ portanto instanciamos o campo `eval f x` como `Ax + b`
 Agora seja g : V² → V² tal que g(x) := Cx + d, temos que
 (f ∘ g)(x) = f(g(x)) = f( Cx + d ) = A ( Cx + d ) + b = (A·C)x + (A · d + b)
 -/
-instance : AffineMapClass Mat2Vec2 where
+
+instance : AffineMapLike Mat2Vec2 Vec2 where
   eval f x := mulVec f.A x + f.b
   compose f g := { A := matMul f.A g.A , b := (mulVec f.A g.b) + f.b }
 
-infixr:70 " ⬝ " => AffineMapClass.eval
-infixr:70 " ∘ " => AffineMapClass.compose
+infixr:70 " ⬝ " => AffineMapLike.eval (G := Mat2Vec2) (V := Vec2)
+infixr:70 " ∘ " => AffineMapLike.compose (G := Mat2Vec2) (V := Vec2)
+
 
 def I2 : Mat2 := !![1, 0; 0, 1]
 

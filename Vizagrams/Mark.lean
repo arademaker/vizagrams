@@ -44,4 +44,23 @@ instance : HMul Mat2Vec2 Mark (Array Prim) where
 instance : HMul Mark Mat2Vec2 (Array Prim) where
   hMul M g := g * M.θ
 
+inductive Nil : Type
+  | mk : Nil
+
+instance : MarkInterface Nil where
+  θ _ := #[]
+
+instance : Coe Nil Mark where
+  coe m := Mark.mk m
+
+#check (Nil.mk : Mark)
+
+instance : MarkInterface Unit where
+  θ _ := #[]
+
+instance : Coe Unit Mark where
+  coe m := Mark.mk m
+
+#check Unit
+
 end GraphicalMark

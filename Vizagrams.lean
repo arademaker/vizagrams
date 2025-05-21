@@ -7,3 +7,5 @@ import Vizagrams.Prim
 import Vizagrams.Mark
 import Vizagrams.FreeMonad
 import Vizagrams.Envelope
+import Vizagrams.VizBackend
+import Vizagrams.GraphicExpression
