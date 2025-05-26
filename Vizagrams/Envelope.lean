@@ -15,6 +15,25 @@ def envelopePts (pts : Array (Vec2)) (v : Vec2) : Float :=
   else
     0.0
 
+def sampleQBezier (p0 c p1 : Vec2) (n : Nat) : Array Vec2 :=
+  List.range n |>.map (fun i =>
+    let t := Float.ofNat i / Float.ofNat (n - 1)
+    let oneMinusT := 1 - t
+    ScalarMul (oneMinusT ^ 2) p0 +
+    ScalarMul (2 * oneMinusT * t) c +
+    ScalarMul (t ^ 2) p1
+  ) |>.toArray
+
+def sampleCBezier (p0 c1 c2 p1 : Vec2) (n : Nat) : Array Vec2 :=
+  List.range n |>.map (fun i =>
+    let t := Float.ofNat i / Float.ofNat (n - 1)
+    let oneMinusT := 1 - t
+    ScalarMul (oneMinusT ^ 3) p0 +
+    ScalarMul (3 * oneMinusT ^ 2 * t) c1 +
+    ScalarMul (3 * oneMinusT * t ^ 2) c2 +
+    ScalarMul (t ^ 3) p1
+  ) |>.toArray
+
 -- Envelope geral de qualquer `Geom` na direção `v`.
 def envelope (g : Geom) (v' : Vec2) : Float :=
   let v := normalize v'
@@ -45,6 +64,38 @@ def envelope (g : Geom) (v' : Vec2) : Float :=
   | .text pos _ size =>
       -- Assume point at position plus size as radius
       dotProd v (pos + size • v)
+  | .arc rx ry c rot init final =>
+      -- Amostra alguns pontos ao longo do arco e computa o envelope máximo
+      let steps := 32
+      let angles := List.range steps |>.map (fun i =>
+        let t := Float.ofNat i / Float.ofNat (steps : Nat)
+        init + t * (final - init))
+      let pts := angles.map (fun θ =>
+        let p := pointOnEllipse θ rx ry
+        rotateVec p rot + c)
+      envelopePts pts.toArray v
+  | .qbezier bpts cpts =>
+      let n := bpts.size
+      if h : n ≥ 2 ∧ cpts.size == n - 1 then
+        let pts :=
+          (List.range (n - 1)).flatMap (fun i =>
+            (sampleQBezier (bpts[i]!) (cpts[i]!) (bpts[i+1]!) 20).toList)
+        envelopePts pts.toArray v
+      else
+        0.0
+
+  | .cbezier bpts cpts =>
+      let n := bpts.size
+      if h : n ≥ 2 ∧ cpts.size == 2 * (n - 1) then
+        let pts :=
+          (List.range (n - 1)).flatMap (fun i =>
+            let c1 := cpts[2 * i]!
+            let c2 := cpts[2 * i + 1]!
+            (sampleCBezier (bpts[i]!) c1 c2 (bpts[i+1]!) 20).toList)
+        envelopePts pts.toArray v
+      else
+        0.0
+
 
 /-- Retângulo envoltório (bounding box) dado pelos limites mínimo e máximo em x e y. -/
 structure BoundingBox where

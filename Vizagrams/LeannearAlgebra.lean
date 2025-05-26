@@ -73,6 +73,16 @@ def matMul (A B : Mat2) : Mat2 :=
 
 def nullVec2 : Vec2 := ![0,0]
 
+def rotateVec (v : Vec2) (θ : Float) : Vec2 :=
+  let cosθ := Float.cos θ
+  let sinθ := Float.sin θ
+  ![cosθ * v 0 - sinθ * v 1, sinθ * v 0 + cosθ * v 1]
+
+def pointOnEllipse (θ rx ry : Float) : Vec2 :=
+  ![rx * Float.cos θ, ry * Float.sin θ]
+
+def atan2pi (v : Vec2) : Float :=
+  Float.atan2 (v 1) (v 0)
 
 
 /- # Instanciando AffineMapClass para Mat2Vec2
