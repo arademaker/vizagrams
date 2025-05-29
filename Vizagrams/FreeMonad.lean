@@ -11,6 +11,12 @@ structure ℍ where -- Tranformações Gráficas
   s : Style
   g : Mat2Vec2
 
+instance : Coe Style ℍ where
+  coe st := ℍ.mk st (scale 1)
+
+instance : Coe Mat2Vec2 ℍ where
+  coe Ab := ℍ.mk {} Ab
+
 instance : Mul ℍ where
   mul x y := ℍ.mk (Style.comp x.s y.s) ( x.g )
 

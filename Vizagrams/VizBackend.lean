@@ -119,7 +119,7 @@ def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
 def draw (t : 𝕋 GraphicalMark.Mark) (fr : Frame := frame) : ProofWidgets.Html :=
   drawsvg (flat t ) fr
 
-def NewCircle (r : Float) (c : Vec2) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
+def NewCircle (r : Float := 1) (c : Vec2 := ![0,0]) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
   let rc := Geom.circle r c
   {geom := rc, style := st}
 
@@ -130,6 +130,10 @@ def NewPolygon (pts : Array (Vec2)) (st : Style := {fillColor := Color.mk 0 0 0}
 def NewLine ( l₁ l₂  : Vec2 ) ( st : Style := {strokeColor := Color.mk 0 0 0} ): Prim :=
   let line := Geom.line l₁ l₂
   {geom := line , style := st}
+
+def NewText (content : String) (pos : Vec2 := ![0,0] ) (size : Float := 1) ( st : Style := {fillColor := Color.mk 0 0 0} ): Prim :=
+  let text := Geom.text pos content size
+  {geom := text , style := st}
 
 def BoundingBox.toFrame (bb : Envelope.BoundingBox) : Frame :=
   let dx := (bb.upper 0) - (bb.lower 0)
