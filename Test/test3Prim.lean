@@ -16,6 +16,10 @@ open FreeMonad
 -/
 def myStyle : Sty.Style :=
   { strokeColor := Color.mk 0 0 1
+  , strokeWidth := Sty.StyleSize.px 5 }
+
+def SliceStyle : Sty.Style :=
+  { strokeColor := Color.mk 0 0 1
   , fillColor := Color.mk 0 1 0
   , strokeWidth := Sty.StyleSize.px 5 }
 
@@ -34,6 +38,9 @@ def arc₂ : Prim :=
 
 #html draw arc₂
 
+def slice : Prim :=   { geom := arc₁, style := SliceStyle }
+#html draw slice
+
 /-- Curva Bézier quadrática com:
     - pontos base: (100, -100) → (300, -100)
     - ponto de controle: (200, 0)
@@ -49,6 +56,9 @@ def qbez₂ : Prim :=
 
 #html draw qbez₂
 
+def qbez₃ : Prim :=
+  { geom := qbez₁, style := SliceStyle }
+#html draw qbez₃
 /-- Curva Bézier cúbica com:
     - pontos base: (100, -200) → (300, -200)
     - pontos de controle:
@@ -63,3 +73,10 @@ def cbez₁ : Geom :=
 def cbez₂ : Prim := { geom := cbez₁, style := myStyle }
 
 #html draw cbez₂
+
+def cbez₃ : Prim := { geom := cbez₁, style := SliceStyle }
+#html draw cbez₃
+
+def square₀ : Prim := NewPolygon #[![0.7,0.7],![-0.7,0.7],![-0.7,-0.7],![0.7,-0.7]] SliceStyle
+
+#html draw ( cbez₃ + square₀)
