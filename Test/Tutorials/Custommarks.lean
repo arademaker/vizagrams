@@ -103,7 +103,7 @@ structure Face where
 def NewQBezier
   (bpts : Array Vec2)
   (cpts : Array Vec2)
-  (st   : Style := { strokeColor := Color.mk 0 0 0 })
+  (st   : Style := { strokeColor := Color.mk 1 0 0 ,strokeWidth := Sty.StyleSize.px 50})
   : Prim :=
   let q := Geom.qbezier bpts cpts
   { geom := q, style := st }
@@ -159,9 +159,9 @@ def face₁ : 𝕋 Mark :=
   { center    := ![2, 2],
     size      := 0.0001,
     smile     := 0.08,
-    eyestyle  := { fillColor := some (Color.mk 0.2 0.2 1) },
+    eyestyle  := { fillColor := some (Color.mk 0.5 0.5 1) },
     headstyle := {},
-    smilestyle := { strokeColor := some (Color.mk 1 0 0) },
+    smilestyle := { strokeColor := some (Color.mk 1 0 0) , strokeWidth := Sty.StyleSize.px 50},
   : Face }
 
 def 𝕋scale (z : Float) : FreeMonad.ℍ := { s := {} , g := scale z}

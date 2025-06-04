@@ -34,4 +34,4 @@ def bars : GraphicExpression (List Float):= {
 }
 #check bars.eval data₁
 
-#html Draw ( bars.eval data₁)
+#html draw ( bars.eval data₁)
