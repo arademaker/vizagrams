@@ -9,6 +9,7 @@ open GraphicalMark
 open FreeMonad
 open Envelope
 
+
 -- Arrow
 structure Arrow where
     pts : Vec2 × Vec2
@@ -36,7 +37,6 @@ structure RegularPolygon where
 instance : ToString RegularPolygon where
   toString p := s!"Regular Polygon with {p.sides} sides of size {p.size}"
 
--- Agora precisamos implementar MarkInterface
 def findPointbyAngle (x : Float) : Vec2 :=
   ![Float.cos x , Float.sin x]
 
@@ -61,11 +61,11 @@ instance : Coe RegularPolygon Mark where
 def triangle : RegularPolygon := {sides := 3 , size := 1, style := {fillColor := Color.mk 0 0 1 }}
 #html draw triangle
 
-def arrow₁ : 𝕋 Mark :=
+def arrow₁ : Mark :=
   {
     pts := (![0, 0], ![2, 0]),
     headsize := 0.3,
-    headstyle := {fillColor := Color.mk 1 0 0},  -- vermelho
+    headstyle := {fillColor := Color.mk 1 0 0},
     headmark := Mark.mk {
       center := ![0, 0],
       sides := 3,
@@ -74,11 +74,45 @@ def arrow₁ : 𝕋 Mark :=
     : RegularPolygon}
   : Arrow }
 
+
+#html draw arrow₁
+def circle₁ : Mark := NewCircle 1 ![1,0.5]
+--set_option pp.universes true in
+#check (circle₁ + circle₁)
+#check (arrow₁ + arrow₁)
+--#check ULift circle₁
+#check ULift.{2} Mark
+
+#check ( (arrow₁ : Mark ) + (circle₁ :Mark) : 𝕋 Mark)
+#check Int
+#html draw (arrow₁ →[0.5] arrow₁)
+universe v
+#check (𝕋 (Type v) )
+
+structure test where
+  myMark : Mark
+
+#check test
+instance : MarkInterface test where
+  θ m := m.myMark.θ
+
+instance : Coe test Mark where
+  coe m := Mark.mk m
+
+def c₁ := (NewCircle 1 ![0,0])
+def test₁ : test := test.mk c₁
+#check (test₁ :𝕋 Mark)
+#check (c₁ :𝕋 Mark)
+-- #check ((test₁: 𝕋 Mark) + (circle₁: 𝕋 Mark) : 𝕋 Mark)
+#check (test₁ : 𝕋 Mark) + (test₁:𝕋 Mark)
+
+/-
+
+-/
 def 𝕋rotate (y : Float) : FreeMonad.ℍ := { s := {} , g := rotate y}
 
-#html draw ( 𝕋rotate (π/3) * arrow₁)
+--#html draw ( 𝕋rotate (π/3) * arrow₁)
 
-open Mathlib
 open ProofWidgets.Svg
 open Sty
 
@@ -167,3 +201,58 @@ def face₁ : 𝕋 Mark :=
 def 𝕋scale (z : Float) : FreeMonad.ℍ := { s := {} , g := scale z}
 
 #html draw ( (𝕋scale 0.5) * face₁)
+
+/-
+angles = 0:π/10:π
+d = Face(smile=0.5) + mapreduce(a->R(a)Arrow(pts=[[1,0],[2,0]],headsize=a/10),+, angles) + S(:fill=>:grey)T(0,-1.5)*Rectangle(h=1,w=2)
+
+draw(d,height=200)
+-/
+
+def 𝕋translate (v : Vec2): ℍ := {s := {}, g := translate v }
+def rectEstilo : Style := { fillColor := some (Color.mk 0.5 0.5 0.5) }
+def rect₁ : 𝕋 Mark := NewPolygon #[![0,0],![2,0],![2,1],![0,1]] rectEstilo
+def rectTransladada : 𝕋 Mark := 𝕋translate (![0, -1.5]) * rect₁
+
+def angles : Array Float :=
+  (Array.range 11).map (fun i => i.toFloat * π / 10.0)
+
+def rotatedArrow (a : Float) : 𝕋 Mark :=
+  let headTri : RegularPolygon := {
+    center := ![0, 0],
+    sides  := 3,
+    size   := a / 10,
+    style  := { fillColor := some (Color.mk 1 0 0) }
+  }
+  let arr : Arrow := {
+    pts       := (![1, 0], ![2, 0]),
+    headsize  := a / 10,
+    headstyle := { fillColor := some (Color.mk 1 0 0) },
+    headmark  := Mark.mk headTri
+  }
+  𝕋rotate a * (arr : 𝕋 Mark)
+
+def allArrows :=
+  let arrowArray := angles.map rotatedArrow
+  if h : arrowArray.size > 0 then
+    arrowArray.foldl (fun acc arr => acc + arr) arrowArray[0]
+  else
+    rotatedArrow 0
+
+def centerCircle : 𝕋 Mark :=
+  NewCircle 0.5 ![0, 0] { fillColor := some (Color.mk 0 0 1) }
+
+def greyRectangle : 𝕋 Mark :=
+  let rectStyle : Style := { fillColor := some (Color.mk 0.5 0.5 0.5) }
+  let rect : 𝕋 Mark := NewPolygon #[![-1,0],![1,0],![1,1],![-1,1]] rectStyle
+  𝕋translate ![0, -1.5] * rect
+
+def finalDrawing : 𝕋 Mark :=
+  (centerCircle + greyRectangle)
+
+-- #check ( circle₁ + arrow₁)
+-- #check ( allArrows + circle₁ )
+
+#html draw finalDrawing
+
+#check (Type 1 → Type )

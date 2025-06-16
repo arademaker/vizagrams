@@ -312,7 +312,7 @@ def sierpinskiPrims : Nat → Array Prim
   -- concatena
   t1 ++ t2 ++ t3
 
-#html drawsvg (sierpinskiPrims 4) (BoundingBox.toFrame (boundingBoxPrims (sierpinskiPrims 4)))
+#html drawsvg  (sierpinskiPrims 4) (BoundingBox.toFrame (boundingBoxPrims (sierpinskiPrims 4)))
 
 /- Translação em 𝕋 Mark
 Em FreeMonad, temos:
@@ -433,6 +433,8 @@ instance : Coe sierpinski Mark where
   coe m := Mark.mk m
 
 #html draw Sierpinski₃
+def TT : FreeMonad.ℍ := {s := {}, g := translate ![3,0]}
+#html draw (TT * (Sierpinski₃: FreeMonad.𝕋 Mark))
 
 -- # Poligonos Regulares
 
