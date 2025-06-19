@@ -3,25 +3,35 @@ universe u v
 structure Node where
   { a : Type v }
   val : a
+#check List
+#check (ULift.up 3 : ULift.{7} Nat )
+def r := (ULift.up 3 : ULift.{7} Nat)
+
+def t₁ : Node := Node.mk "t₁"
+#check t₁
 
 def Node.ulift (x : Node.{u}) : Node.{max u v} where
   a := ULift x.a
   val := ULift.up x.val
+
+#check (ULift.up t₁ : ULift.{7} Node)
+def t₇ := (ULift.up t₁ : ULift.{7} Node)
+#check t₇
 
 inductive Tree (a : Type u) where
   | pure : a → Tree a
   | comp : Tree a → Tree a → Tree a
 deriving Repr
 /-
-def Tree.ulift (a : Tree.{u} α ) : Tree.{max u v} (ULift α) := 
+def Tree.ulift (a : Tree.{u} α ) : Tree.{max u v} (ULift α) :=
   match a with
   | .pure x => .pure (ULift.up x )
-  | .comp s t => .comp s.ulift t.ulift  
+  | .comp s t => .comp s.ulift t.ulift
 -/
-def Tree.ulift (a : Tree.{u+1} Node ) : Tree.{(max u v) + 1} (Node) := 
+def Tree.ulift (a : Tree.{u+1} Node ) : Tree.{(max u v) + 1} (Node) :=
   match a with
   | .pure x => .pure x.ulift
-  | .comp s t => .comp s.ulift t.ulift  
+  | .comp s t => .comp s.ulift t.ulift
 
 instance : HAdd (Tree Node.{u}) (Tree Node.{v}) (Tree Node.{max u v}) where
   hAdd m n := Tree.comp m.ulift n.ulift
