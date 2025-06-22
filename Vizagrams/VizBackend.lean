@@ -135,6 +135,10 @@ def NewText (content : String) (pos : Vec2 := ![0,0] ) (size : Float := 1) ( st 
   let text := Geom.text pos content size
   {geom := text , style := st}
 
+def NewQBezier (bpts cpts : Array Vec2  ) (st : Style := {}) : Prim :=
+  let bezier := Geom.qbezier bpts cpts
+  {geom := bezier , style := st}
+
 def BoundingBox.toFrame (bb : Envelope.BoundingBox) : Frame :=
   let dx := (bb.upper 0) - (bb.lower 0)
   let dy := (bb.upper 1) - (bb.lower 1)

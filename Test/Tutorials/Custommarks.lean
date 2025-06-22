@@ -8,9 +8,14 @@ open ProofWidgets Svg
 open GraphicalMark
 open FreeMonad
 open Envelope
+open Sty
 
+/-
+d = Arrow()
+draw(d, height=100)
+-/
 
--- Arrow
+-- Criando Mark Arrow
 structure Arrow where
     pts : Vec2 × Vec2
     headsize : Float
@@ -27,6 +32,7 @@ instance : MarkInterface Arrow where
 instance : Coe Arrow Mark where
  coe m := Mark.mk m
 
+-- Criando Mark de poligono regular
 structure RegularPolygon where
   center : Vec2 := ![0,0]
   sides : Nat
@@ -58,10 +64,11 @@ instance : MarkInterface RegularPolygon where
 instance : Coe RegularPolygon Mark where
   coe m := Mark.mk m
 
+-- Desenhando uma Arrow com um Triangulo como HeadMark
 def triangle : RegularPolygon := {sides := 3 , size := 1, style := {fillColor := Color.mk 0 0 1 }}
 #html draw triangle
 
-def arrow₁ : Mark :=
+def arrow₁ : 𝕋 Mark :=
   {
     pts := (![0, 0], ![2, 0]),
     headsize := 0.3,
@@ -76,46 +83,13 @@ def arrow₁ : Mark :=
 
 
 #html draw arrow₁
-def circle₁ : Mark := NewCircle 1 ![1,0.5]
---set_option pp.universes true in
-#check (circle₁ + circle₁)
-#check (arrow₁ + arrow₁)
---#check ULift circle₁
-#check ULift.{2} Mark
 
-#check ( (arrow₁ : Mark ) + (circle₁ :Mark) : 𝕋 Mark)
-#check Int
-#html draw (arrow₁ →[0.5] arrow₁)
-universe v
-#check (𝕋 (Type v) )
-
-structure test where
-  myMark : Mark
-
-#check test
-instance : MarkInterface test where
-  θ m := m.myMark.θ
-
-instance : Coe test Mark where
-  coe m := Mark.mk m
-
-def c₁ := (NewCircle 1 ![0,0])
-def test₁ : test := test.mk c₁
-#check (test₁ :𝕋 Mark)
-#check (c₁ :𝕋 Mark)
--- #check ((test₁: 𝕋 Mark) + (circle₁: 𝕋 Mark) : 𝕋 Mark)
-#check (test₁ : 𝕋 Mark) + (test₁:𝕋 Mark)
-
-/-
-
--/
 def 𝕋rotate (y : Float) : FreeMonad.ℍ := { s := {} , g := rotate y}
+#html draw ( 𝕋rotate (π/3) * arrow₁)
+def 𝕋scale (y : Float) : ℍ := { s := {}, g := scale y }
+#html draw (𝕋scale 0.5 * arrow₁)
 
---#html draw ( 𝕋rotate (π/3) * arrow₁)
-
-open ProofWidgets.Svg
-open Sty
-
+-- Criando Estrutura d eFace
 structure Face where
   center     : Vec2 := ![0, 0]
   size       : Float := 1
@@ -123,25 +97,6 @@ structure Face where
   headstyle  : Style := {}
   smile      : Float := 0
   smilestyle : Style := {}
-
-/--
-  NewQBezier: constrói um primitivo de Curva de Bézier Quadrática.
-
-  `bpts`  = lista de pontos de base (Array Vec2), tamanho ≥ 2
-  `cpts`  = lista de pontos de controle (Array Vec2), tamanho = bpts.size - 1
-  `st`    = estilo (Stroke, Fill, etc). Por padrão, usa linha preta.
-
-  Internamente, esse primitivo corresponde a `Geom.qbezier bpts cpts` em `Vizagrams.Geom`,
-  e será convertido para SVG no `geomToShape`.
--/
-def NewQBezier
-  (bpts : Array Vec2)
-  (cpts : Array Vec2)
-  (st   : Style := { strokeColor := Color.mk 1 0 0 ,strokeWidth := Sty.StyleSize.px 50})
-  : Prim :=
-  let q := Geom.qbezier bpts cpts
-  { geom := q, style := st }
-
 
 instance : MarkInterface Face where
   θ f :=
@@ -161,11 +116,17 @@ instance : MarkInterface Face where
     let eyeRight : 𝕋 Mark := NewCircle 1 rightEyeCenter eyeStyle
     let eyes := eyeLeft + eyeRight
 
-    let bptsOrig : Array Vec2 := #[ ![-1.3, 0], ![1.3, 0] ]
-    let cptsOrig : Array Vec2 := #[ ![0, -f.smile] ]
+    let bptsOrig := #[
+      ![ 3999998.0,  -15750000.58 ],
+      ![ 5999998.0,  -15750000.58 ]
+    ]
 
-    let bptsScaled : Array Vec2 := bptsOrig.map (fun v => ScalarMul 2 v)
-    let cptsScaled : Array Vec2 := cptsOrig.map (fun v => ScalarMul 2 v)
+    let cptsOrig := #[
+      ![ 4999998.0,  -16750000.58 ]
+    ]
+
+    let bptsScaled : Array Vec2 := bptsOrig.map (fun v => ScalarMul 1 v)
+    let cptsScaled : Array Vec2 := cptsOrig.map (fun v => ScalarMul 1 v)
 
     let offsetSmile : Vec2 := ScalarMul f.smile (![0, 1])
     let bptsSmile  : Array Vec2 := bptsScaled.map (fun v => v + offsetSmile)
@@ -179,8 +140,8 @@ instance : MarkInterface Face where
     let cptsCentered : Array Vec2 := cptsFinal.map (fun v => v + f.center)
 
     let fator : Float := f.size / 5
-    let bptsOut : Array Vec2 := bptsCentered.map (fun v => ScalarMul fator v)
-    let cptsOut : Array Vec2 := cptsCentered.map (fun v => ScalarMul fator v)
+    let bptsOut : Array Vec2 := bptsCentered.map (fun v => ScalarMul fator (v))
+    let cptsOut : Array Vec2 := cptsCentered.map (fun v => ScalarMul fator (v))
 
     let smile : 𝕋 Mark := NewQBezier bptsOut cptsOut smileStyle
 
@@ -192,15 +153,13 @@ instance : Coe Face Mark where
 def face₁ : 𝕋 Mark :=
   { center    := ![2, 2],
     size      := 0.0001,
-    smile     := 0.08,
+    smile     := 0.8,
     eyestyle  := { fillColor := some (Color.mk 0.5 0.5 1) },
     headstyle := {},
-    smilestyle := { strokeColor := some (Color.mk 1 0 0) , strokeWidth := Sty.StyleSize.px 50},
+    smilestyle := { fillColor := some (Color.mk 1 0 0) , strokeWidth := Sty.StyleSize.px 50},
   : Face }
 
-def 𝕋scale (z : Float) : FreeMonad.ℍ := { s := {} , g := scale z}
-
-#html draw ( (𝕋scale 0.5) * face₁)
+#html draw ( (𝕋scale 0.5) * face₁) --(BoundingBox.toFrame (boundingBox𝕋 ( face₁)) )
 
 /-
 angles = 0:π/10:π
@@ -232,7 +191,7 @@ def rotatedArrow (a : Float) : 𝕋 Mark :=
   }
   𝕋rotate a * (arr : 𝕋 Mark)
 
-def allArrows :=
+def allArrows : 𝕋 Mark :=
   let arrowArray := angles.map rotatedArrow
   if h : arrowArray.size > 0 then
     arrowArray.foldl (fun acc arr => acc + arr) arrowArray[0]
@@ -250,9 +209,89 @@ def greyRectangle : 𝕋 Mark :=
 def finalDrawing : 𝕋 Mark :=
   (centerCircle + greyRectangle)
 
--- #check ( circle₁ + arrow₁)
--- #check ( allArrows + circle₁ )
+#html draw ((𝕋scale 0.5 * allArrows) + finalDrawing)
+-- #html draw (finalDrawing + allArrows)
 
-#html draw finalDrawing
+structure Tree where
+  h : Float
+deriving Inhabited
 
-#check (Type 1 → Type )
+
+instance : MarkInterface Tree where
+  θ t :=
+    let height := t.h
+
+    let trunkStyle : Style := { fillColor := some (Color.mk 0.6 0.3 0.1) }
+    let trunk : 𝕋 Mark :=
+      NewPolygon #[
+        ![-0.25, 0], ![ 0.25, 0],
+        ![ 0.25, height/2], ![-0.25, height/2]
+      ] trunkStyle
+
+    let leafStyle : Style := { fillColor := some (Color.mk 0   0.8 0) }
+
+    let bigLeaf : 𝕋 Mark :=
+      NewCircle 0.5 ![0,0] leafStyle
+
+    let angles : Array Float :=
+      (Array.range 10).map (fun i => i.toFloat * 0.7)
+
+    let smallLeaves : Array (𝕋 Mark) :=
+      angles.map fun θ =>
+        𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5]) * (NewCircle 0.3 ![0,0] leafStyle : 𝕋 Mark)
+
+    let leavesTotal : 𝕋 Mark :=
+      smallLeaves.foldl (· + ·) bigLeaf
+
+    let leafOff : Float := height/2 + 0.5
+    flat (𝕋scale 0.75 * (trunk + ((𝕋translate (![0, leafOff])) * leavesTotal)))
+
+instance : Coe Tree Mark where
+  coe t := Mark.mk t
+
+def diagram : 𝕋 Mark :=
+  (Tree.mk 3) → Tree.mk 6
+
+#html draw diagram
+
+structure Forest where
+  n : Nat
+
+instance : MarkInterface Forest where
+  θ f :=
+    let half := Float.sqrt (f.n.toFloat) * 0.5 + 1.0
+
+    let lcg (s : UInt32) : UInt32 := s * 1664525 + 1013904223
+    let randF (s : UInt32) : Float × UInt32 :=
+      let s' := lcg s
+      (s'.toFloat / 4294967296.0, s')
+
+    let (_, posArr) := Id.run do
+      let mut s : UInt32 := 4
+      let mut arr : Array Vec2 := #[]
+      for _ in [: f.n] do
+        let (x, s1) := randF s; s := s1
+        let (y, s2) := randF s; s := s2
+        arr := arr.push ![(x * 2 - 1) * half, (y * 2 - 1) * half]
+      pure (s, arr)
+
+    let treePrimsArr : Array (Array Prim) :=
+      posArr.map fun p =>
+        flat (𝕋translate p * (𝕋scale 0.001) * (Tree.mk 2 : 𝕋 Mark))
+
+    let allTreePrims : Array Prim :=
+      treePrimsArr.foldl (· ++ ·) #[]
+
+    let bg : 𝕋 Mark :=
+      NewPolygon #[
+        ![-half, -half], ![ half, -half],
+        ![ half,  half], ![-half,  half]
+      ] { fillColor := some (Color.mk 0.5 0.5 0.5)}
+    let bgPrims := flat bg
+
+    bgPrims ++ allTreePrims
+
+instance : Coe Forest Mark where
+  coe f := Mark.mk f
+
+#html draw (Forest.mk 50) (BoundingBox.toFrame (boundingBox𝕋 (Forest.mk 50)))
