@@ -74,15 +74,7 @@ def envelope (g : Geom) (v' : Vec2) : Float :=
         let p := pointOnEllipse θ rx ry
         rotateVec p rot + c)
       envelopePts pts.toArray v
-  | .qbezier bpts cpts =>
-      let n := bpts.size
-      if h : n ≥ 2 ∧ cpts.size == n - 1 then
-        let pts :=
-          (List.range (n - 1)).flatMap (fun i =>
-            (sampleQBezier (bpts[i]!) (cpts[i]!) (bpts[i+1]!) 20).toList)
-        envelopePts pts.toArray v
-      else
-        0.0
+  | .qbezier m q => 0
 
   | .cbezier bpts cpts =>
       let n := bpts.size

@@ -12,8 +12,8 @@ open FreeMonad
 namespace VizBackend
 
 private def frame : Frame where
-  xmin   := -2
-  ymin   := -2
+  xmin   := 0
+  ymin   := 0
   xSize  := 10
   width  := 400
   height := 400
@@ -66,7 +66,12 @@ def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
             " " ++ largeArc ++ " " ++ sweep ++ " " ++ x1 ++ " " ++ y1
 
     Shape.path d
-  | .qbezier bpts cpts =>
+
+  | .qbezier m q =>
+    let d := s!"M {getCoordinates m } Q {getCoordinates q.fst} {getCoordinates q.snd}"
+    Shape.path d
+
+/-  | .qbezier bpts cpts =>
       if h : bpts.size ≥ 2 ∧ cpts.size == bpts.size - 1 then
         let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y
         let start := vecToPoint bpts[0]! fr
@@ -83,6 +88,7 @@ def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
         Shape.path d
       else
         Shape.path ""
+-/
   | .cbezier bpts cpts =>
       if h : bpts.size ≥ 2 ∧ cpts.size == 2 * (bpts.size - 1) then
         let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y
@@ -135,8 +141,8 @@ def NewText (content : String) (pos : Vec2 := ![0,0] ) (size : Float := 1) ( st 
   let text := Geom.text pos content size
   {geom := text , style := st}
 
-def NewQBezier (bpts cpts : Array Vec2  ) (st : Style := {}) : Prim :=
-  let bezier := Geom.qbezier bpts cpts
+def NewQBezier (m : Vec2) (q : Vec2 × Vec2) (st : Style := {}) : Prim :=
+  let bezier := Geom.qbezier m q
   {geom := bezier , style := st}
 
 def BoundingBox.toFrame (bb : Envelope.BoundingBox) : Frame :=

@@ -15,7 +15,7 @@ inductive Geom where
   | path     (d : String)
   | text     (pos : Vec2) (content : String) (size : Float)
   | arc      (rx ry : Float) (c : Vec2) (rot init final : Float)
-  | qbezier (bpts cpts : Array Vec2)
+  | qbezier  (Moveto : Vec2) (QbezierCurveto : Vec2 × Vec2)
   | cbezier (bpts cpts : Array Vec2)
 deriving Repr
 
@@ -30,7 +30,7 @@ inductive CovGeom where
   | path     (d : String)             -- não covariante (apenas passa direto)
   | text     (pos : Vec2) (content : String) (size : Float) -- apenas translada
   | arc      (p1 p2 c p4 p5 : Vec2) -- eixo rx, eixo ry, centro, ponto inicial, ponto final
-  | qbezier  (bpts cpts : Array Vec2)
+  | qbezier  (mov : Vec2) (curve : Vec2 × Vec2)
   | cbezier  (bpts cpts : Array Vec2)
 deriving Repr
 
@@ -49,7 +49,7 @@ def ϕ : Geom → CovGeom
       let p4 := rotateVec (pointOnEllipse i rx ry) rot + c
       let p5 := rotateVec (pointOnEllipse f rx ry) rot + c
       .arc p1 p2 c p4 p5
-  | .qbezier bpts cpts     => .qbezier bpts cpts
+  | .qbezier m cv          => .qbezier m cv                     -- ⬅️
   | .cbezier bpts cpts     => .cbezier bpts cpts
 
 def ψ : CovGeom → Geom
@@ -78,7 +78,7 @@ def ψ : CovGeom → Geom
       let v2 := rotateVec (p5 - c) (-rot)
       let f := atan2pi ![v2 0 / rx, v2 1 / ry]
       .arc rx ry c rot i f
-  | .qbezier bpts cpts     => .qbezier bpts cpts
+  | .qbezier m cv          => .qbezier m cv                     -- ⬅️
   | .cbezier bpts cpts     => .cbezier bpts cpts
 
 instance : HMul Mat2Vec2 CovGeom CovGeom where
@@ -92,7 +92,8 @@ instance : HMul Mat2Vec2 CovGeom CovGeom where
     | .path d            => .path d
     | .text pos txt sz   => .text (g ⬝ pos) txt sz
     | .arc p1 p2 c p4 p5 => .arc (g ⬝ p1) (g ⬝ p2) (g ⬝ c) (g ⬝ p4) (g ⬝ p5)
-    | .qbezier b c       => .qbezier (b.map (g ⬝ ·)) (c.map (g ⬝ ·))
+    | .qbezier m (cp, trg) =>
+        .qbezier (g ⬝ m) (g ⬝ cp, g ⬝ trg)
     | .cbezier b c       => .cbezier (b.map (g ⬝ ·)) (c.map (g ⬝ ·))
 
 instance : HMul Mat2Vec2 Geom Geom where

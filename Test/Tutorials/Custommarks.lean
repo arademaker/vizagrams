@@ -100,14 +100,17 @@ structure Face where
 
 instance : MarkInterface Face where
   θ f :=
+    -- estilos --------------------------------------------
     let eyeStyle  := Style.comp { fillColor := some (Color.mk 0 0 1) } f.eyestyle
     let headStyle := Style.comp
       { fillColor := some (Color.mk 1 1 1),
         strokeColor := some (Color.mk 0 0 0) } f.headstyle
     let smileStyle := Style.comp { fillColor := none } f.smilestyle
 
+    -- cabeça ---------------------------------------------
     let head : 𝕋 Mark := NewCircle 5 f.center headStyle
 
+    -- olhos ----------------------------------------------
     let eyeOffsetY : Float :=  2
     let eyeOffsetX : Float :=  2
     let leftEyeCenter  : Vec2 := f.center + ![-eyeOffsetX, eyeOffsetY]
@@ -116,50 +119,30 @@ instance : MarkInterface Face where
     let eyeRight : 𝕋 Mark := NewCircle 1 rightEyeCenter eyeStyle
     let eyes := eyeLeft + eyeRight
 
-    let bptsOrig := #[
-      ![ 3999998.0,  -15750000.58 ],
-      ![ 5999998.0,  -15750000.58 ]
-    ]
-
-    let cptsOrig := #[
-      ![ 4999998.0,  -16750000.58 ]
-    ]
-
-    let bptsScaled : Array Vec2 := bptsOrig.map (fun v => ScalarMul 1 v)
-    let cptsScaled : Array Vec2 := cptsOrig.map (fun v => ScalarMul 1 v)
-
-    let offsetSmile : Vec2 := ScalarMul f.smile (![0, 1])
-    let bptsSmile  : Array Vec2 := bptsScaled.map (fun v => v + offsetSmile)
-    let cptsSmile  : Array Vec2 := cptsScaled.map (fun v => v + offsetSmile)
-
-    let smilePos : Vec2 := ![0, -1.5]
-    let bptsFinal : Array Vec2 := bptsSmile.map (fun v => v + smilePos)
-    let cptsFinal : Array Vec2 := cptsSmile.map (fun v => v + smilePos)
-
-    let bptsCentered : Array Vec2 := bptsFinal.map (fun v => v + f.center)
-    let cptsCentered : Array Vec2 := cptsFinal.map (fun v => v + f.center)
-
-    let fator : Float := f.size / 5
-    let bptsOut : Array Vec2 := bptsCentered.map (fun v => ScalarMul fator (v))
-    let cptsOut : Array Vec2 := cptsCentered.map (fun v => ScalarMul fator (v))
-
-    let smile : 𝕋 Mark := NewQBezier bptsOut cptsOut smileStyle
-
+    -------------------------------------------------------
+    -- >>> sorriso (Quadratic Bézier)  <<<
+    -------------------------------------------------------
+    let moveto : Vec2 := f.center + ![75,250]
+    let qbezier : Vec2 × Vec2 := {fst := f.center + ![(f.center 0) + 150, 300 + f.smile], snd := moveto + ![225,0] }
+    let smile : 𝕋 Mark := NewQBezier moveto qbezier f.smilestyle
     flat (head + eyes + smile)
 
 instance : Coe Face Mark where
   coe f := Mark.mk f
 
 def face₁ : 𝕋 Mark :=
-  { center    := ![2, 2],
+  { center    := ![5, 5],
     size      := 0.0001,
-    smile     := 0.8,
+    smile     := 100.,
     eyestyle  := { fillColor := some (Color.mk 0.5 0.5 1) },
     headstyle := {},
-    smilestyle := { fillColor := some (Color.mk 1 0 0) , strokeWidth := Sty.StyleSize.px 50},
+    smilestyle :=
+    { strokeColor := Color.mk 0 0 1,
+      fillColor := Color.mk 0 1 0,
+      strokeWidth := Sty.StyleSize.px 5}
   : Face }
 
-#html draw ( (𝕋scale 0.5) * face₁) --(BoundingBox.toFrame (boundingBox𝕋 ( face₁)) )
+#html draw ( (𝕋scale 1) * face₁) --(BoundingBox.toFrame (boundingBox𝕋 ( face₁)) )
 
 /-
 angles = 0:π/10:π
