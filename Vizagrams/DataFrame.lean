@@ -1,14 +1,24 @@
-/- # DataFrame
-Aqui definimos o novo tipo de dado DataFrame
-A ideia é que tenhamos uma estrutura formal para o uso das ferramentas de visualização de dados, onde consideramos
-que uma função de plotagem é tal que
+/-
+# DataFrame Implementation in Lean
+
+A formal implementation of DataFrame data structure for data visualization tools.
+The DataFrame is designed to be a foundation for plotting functions of type:
   f : DataFrame → 𝕋 Mark
+
+## Overview
+This implementation provides:
+- Type-safe cell values (Int, Float, String, Bool, None)
+- DataFrame operations (filter, select, map, aggregate)
+- CSV parsing capabilities
+- Formatted display functionality
 -/
 
-/- Definimos CellValue para representar o "Type" em uma célula do Dataframe
-Assim "reduzimos a generalidade do DataFrame" de forma que não podemos ter campos com objetos de tipos como tupla,
-List α e tipos criados pelo usuário, entretanto, caso necessário pode se extender o escopo do `inductive` apenas
-adicionando um novo type que possua um Repr e BEq e seu respectivo ToString -/
+/-
+## CellValue Definition
+Represents the types that can be stored in DataFrame cells.
+This reduces the generality to basic types but can be extended by adding
+new types that implement Repr, BEq, and ToString.
+-/
 inductive CellValue where
   | int : Int → CellValue
   | float : Float → CellValue
@@ -17,7 +27,7 @@ inductive CellValue where
   | none : CellValue
 deriving Repr, BEq
 
--- Instância para converter CellValue em String
+-- ToString instance for CellValue
 instance : ToString CellValue where
   toString
     | CellValue.int i => toString i
@@ -26,53 +36,61 @@ instance : ToString CellValue where
     | CellValue.bool b => toString b
     | CellValue.none => "None"
 
-/- Um DataFrame será visto como um conjunto de colunas e a quantidade de linhas que possui
-portanto definimos Column como uma lista de CellValue
-E definimos DataFrame como uma structure com dois campos
-`columns`: Uma lista de Nome e Valores
-`nrows`: Quantidade de linhas -/
-
+/-
+## DataFrame Structure
+A DataFrame is represented as a collection of named columns and row count.
+- Column: List of CellValue
+- DataFrame: Structure with columns (name-value pairs) and row count
+-/
 def Column := List CellValue
 
 structure DataFrame where
   columns : List (String × Column)
   nrows : Nat
 
--- Instância manual para Repr
+-- Repr instance for DataFrame
 instance : Repr DataFrame where
   reprPrec df _ :=
     "DataFrame with " ++ toString df.columns.length ++ " columns and " ++ toString df.nrows ++ " rows"
 
--- Namespace para operações em DataFrame
+/-
+## DataFrame Operations
+-/
 namespace DataFrame
 
--- Empty DataFrame
+-- ============================================================================
+-- BASIC OPERATIONS
+-- ============================================================================
+
+-- Create empty DataFrame
 def empty : DataFrame := {
   columns := [],
   nrows := 0
 }
 
-#eval empty
-
--- Função auxiliar para obter elemento de lista por índice
+-- Helper function to get element from list by index
 def getAt : List α → Nat → Option α
   | [], _ => none
   | x :: _, 0 => some x
   | _ :: xs, n + 1 => getAt xs n
 
--- Função auxiliar para encontrar uma coluna por nome
+-- Find column by name
 def findColumn (columns : List (String × Column)) (name : String) : Option Column :=
   match columns.find? (fun (colName, _) => colName = name) with
   | none => none
   | some (_, col) => some col
 
--- Função auxiliar para atualizar ou adicionar uma coluna
+-- Update or add column
 def updateColumn (columns : List (String × Column)) (name : String) (newCol : Column) : List (String × Column) :=
   match columns.findIdx? (fun (colName, _) => colName = name) with
-  | none => columns ++ [(name, newCol)]  -- Adiciona nova coluna
-  | some idx => columns.set idx (name, newCol)  -- Atualiza coluna existente
+  | none => columns ++ [(name, newCol)]  -- Add new column
+  | some idx => columns.set idx (name, newCol)  -- Update existing column
 
--- Adicionar uma coluna ao DataFrame
+-- ============================================================================
+-- CORE DATAFRAME OPERATIONS
+-- ============================================================================
+
+-- Add column to DataFrame
 def addColumn (df : DataFrame) (name : String) (col : Column) : DataFrame :=
   if col.length = df.nrows ∨ df.nrows = 0 then
     {
@@ -80,33 +98,37 @@ def addColumn (df : DataFrame) (name : String) (col : Column) : DataFrame :=
       nrows := if df.nrows = 0 then col.length else df.nrows
     }
   else
-    df -- Retorna o DataFrame original se o tamanho não bater
+    df -- Return original DataFrame if size doesn't match
 
--- Obter uma coluna por nome
+-- Get column by name
 def getColumn (df : DataFrame) (name : String) : Option Column :=
   findColumn df.columns name
 
--- Obter o número de colunas
+-- Get number of columns
 def ncols (df : DataFrame) : Nat := df.columns.length
 
--- Obter os nomes das colunas
+-- Get column names
 def columnNames (df : DataFrame) : List String :=
   df.columns.map (fun (name, _) => name)
 
--- Obter uma célula específica (linha, coluna)
+-- Get specific cell (row, column)
 def getCell (df : DataFrame) (row : Nat) (colName : String) : Option CellValue :=
   match df.getColumn colName with
   | none => none
   | some col => getAt col row
 
--- Obter uma linha completa
+-- Get complete row
 def getRow (df : DataFrame) (row : Nat) : List (String × CellValue) :=
   df.columns.filterMap fun (colName, col) =>
     match getAt col row with
     | none => none
     | some val => some (colName, val)
 
--- Filtrar linhas baseado em uma condição
+-- ============================================================================
+-- ADVANCED OPERATIONS
+-- ============================================================================
+
+-- Filter rows based on predicate
 def filter (df : DataFrame) (predicate : List (String × CellValue) → Bool) : DataFrame :=
   let validRows := (List.range df.nrows).filter fun i =>
     predicate (df.getRow i)
@@ -120,7 +142,7 @@ def filter (df : DataFrame) (predicate : List (String × CellValue) → Bool) : 
     nrows := validRows.length
   }
 
--- Selecionar colunas específicas
+-- Select specific columns
 def select (df : DataFrame) (colNames : List String) : DataFrame :=
   let selectedCols := df.columns.filter fun (name, _) => colNames.contains name
   let orderedCols := colNames.filterMap fun name =>
@@ -131,7 +153,7 @@ def select (df : DataFrame) (colNames : List String) : DataFrame :=
     nrows := df.nrows
   }
 
--- Mapear uma função sobre uma coluna
+-- Map function over column
 def mapColumn (df : DataFrame) (colName : String) (f : CellValue → CellValue) : DataFrame :=
   match df.getColumn colName with
   | none => df
@@ -139,17 +161,21 @@ def mapColumn (df : DataFrame) (colName : String) (f : CellValue → CellValue) 
     let newCol := col.map f
     df.addColumn colName newCol
 
--- Aplicar uma função de agregação em uma coluna
+-- Apply aggregation function to column
 def aggregate (df : DataFrame) (colName : String) (f : List CellValue → CellValue) : Option CellValue :=
   match df.getColumn colName with
   | none => none
   | some col => some (f col)
 
--- Função auxiliar para converter Int para Float
+-- ============================================================================
+-- AGGREGATION FUNCTIONS
+-- ============================================================================
+
+-- Helper function to convert Int to Float
 def intToFloat (i : Int) : Float :=
   Float.ofInt i
 
--- Funções de agregação comuns
+-- Sum aggregation
 def sum (values : List CellValue) : CellValue :=
   values.foldl (fun acc val =>
     match acc, val with
@@ -160,24 +186,29 @@ def sum (values : List CellValue) : CellValue :=
     | _, _ => acc
   ) (CellValue.int 0)
 
+-- Count aggregation
 def count (values : List CellValue) : CellValue :=
   CellValue.int values.length
 
--- Função auxiliar para criar string com largura fixa
+-- ============================================================================
+-- DISPLAY FUNCTIONS
+-- ============================================================================
+
+-- Helper function to pad string to fixed width
 def padString (s : String) (width : Nat) : String :=
   let len := s.length
   if len >= width then s
   else s ++ String.mk (List.replicate (width - len) ' ')
 
--- Exibir o DataFrame de forma formatada
+-- Display DataFrame in formatted way
 def display (df : DataFrame) : String :=
   let colNames := df.columnNames
   let colWidth := 12
 
-  -- Cabeçalho
+  -- Header
   let header := colNames.foldl (fun acc name => acc ++ padString name colWidth) ""
 
-  -- Linhas
+  -- Rows
   let rows := (List.range df.nrows).map fun i =>
     let rowData := df.getRow i
     colNames.foldl (fun acc colName =>
@@ -187,23 +218,22 @@ def display (df : DataFrame) : String :=
       | some (_, val) => acc ++ padString (toString val) colWidth
     ) ""
 
-  -- Linha separadora
+  -- Separator line
   let separator := String.mk (List.replicate (colWidth * colNames.length) '-')
 
   " " ++ header ++ " " ++ separator ++ " " ++ String.intercalate " " rows
 
--- Instância ToString para DataFrame
+-- ToString instance for DataFrame
 instance : ToString DataFrame where
   toString := display
 
--- Adicione esta seção dentro do namespace DataFrame, antes do "end DataFrame"
+-- ============================================================================
+-- CSV PARSING
+-- ============================================================================
 
-namespace DataFrame
-
--- Seção de CSV parsing
 section CSV
 
--- Função auxiliar para dividir string por delimitador
+-- Helper function to split string by delimiter
 private def splitString (s : String) (delim : Char) : List String :=
   let chars := s.toList
   let rec splitRec (acc : List String) (current : List Char) (remaining : List Char) : List String :=
@@ -218,7 +248,7 @@ private def splitString (s : String) (delim : Char) : List String :=
         splitRec acc (c :: current) rest
   splitRec [] [] chars
 
--- Função auxiliar para remover espaços em branco no início e fim
+-- Helper function to trim whitespace
 private def trimString (s : String) : String :=
   let chars := s.toList
   let rec trimLeft : List Char → List Char
@@ -238,15 +268,9 @@ private def trimString (s : String) : String :=
 
   String.mk (trimRight (trimLeft chars))
 
--- Função para converter Int para Float
-private def intToFloat (i : Int) : Float :=
-  Float.ofInt i
-
--- Função para tentar parsear um valor como Float (implementação simples)
+-- Try to parse value as Float (simplified implementation)
 private def tryParseFloat (s : String) : Option Float :=
-  -- Implementação simplificada - verifica se contém ponto
   if s.any (· == '.') then
-    -- Tenta converter manualmente
     let parts := splitString s '.'
     match parts with
     | [intPart, fracPart] =>
@@ -260,7 +284,7 @@ private def tryParseFloat (s : String) : Option Float :=
   else
     none
 
--- Função para tentar parsear um valor como Bool
+-- Try to parse value as Bool
 private def tryParseBool (s : String) : Option Bool :=
   let trimmed := trimString s
   let lower := trimmed.toLower
@@ -268,33 +292,29 @@ private def tryParseBool (s : String) : Option Bool :=
   else if lower == "false" || lower == "0" then some false
   else none
 
--- Função para inferir e converter um valor string para CellValue
+-- Infer and convert string value to CellValue
 private def parseCell (s : String) : CellValue :=
   let trimmed := trimString s
 
-  -- Caso vazio
+  -- Empty case
   if trimmed.isEmpty then CellValue.none
-
-  -- Tentar Bool primeiro
+  -- Try Bool first
   else match tryParseBool trimmed with
     | some b => CellValue.bool b
-
-    -- Tentar Int
+    -- Try Int
     | none => match trimmed.toInt? with
       | some i => CellValue.int i
-
-      -- Tentar Float
+      -- Try Float
       | none => match tryParseFloat trimmed with
         | some f => CellValue.float f
-
-        -- Default para String
+        -- Default to String
         | none => CellValue.string trimmed
 
--- Função para parsear uma linha CSV
+-- Parse CSV line
 private def parseCsvLine (line : String) : List String :=
   splitString line ','
 
--- Função principal para parsear CSV
+-- Main function to parse CSV
 def fromCSV (csvContent : String) : DataFrame :=
   let lines := splitString csvContent '\n'
   let nonEmptyLines := lines.filter (fun line => !(trimString line).isEmpty)
@@ -305,20 +325,20 @@ def fromCSV (csvContent : String) : DataFrame :=
     let headers := (parseCsvLine headerLine).map trimString
     let rows := dataLines.map parseCsvLine
 
-    -- Verificar se todas as linhas têm o mesmo número de colunas
+    -- Check if all lines have same number of columns
     let expectedCols := headers.length
     let validRows := rows.filter (fun row => row.length == expectedCols)
 
     if validRows.isEmpty then
-      -- Retornar DataFrame vazio com headers
+      -- Return empty DataFrame with headers
       let emptyColumns := headers.map (fun name => (name, ([] : Column)))
       { columns := emptyColumns, nrows := 0 }
     else
-      -- Construir colunas
+      -- Build columns
       let nrows := validRows.length
-      let columns := headers.enum.map (fun (idx, name) =>
+      let columns := headers.zipIdx.map (fun (name, idx) =>
         let columnValues := validRows.map (fun row =>
-          match row.get? idx with
+          match row[idx]? with
           | some cellStr => parseCell cellStr
           | none => CellValue.none
         )
@@ -331,7 +351,11 @@ end CSV
 
 end DataFrame
 
--- Exemplo de uso
+-- ============================================================================
+-- EXAMPLES AND TESTS
+-- ============================================================================
+
+-- Basic example
 def exemplo : DataFrame :=
   let df := DataFrame.empty
   let df := df.addColumn "nome" [CellValue.string "João", CellValue.string "Maria", CellValue.string "Pedro"]
@@ -339,7 +363,7 @@ def exemplo : DataFrame :=
   let df := df.addColumn "salario" [CellValue.float 5000.0, CellValue.float 6000.0, CellValue.float 5500.0]
   df
 
--- Teste básico
+-- Basic tests
 #eval toString exemplo
 #eval exemplo.ncols
 #eval exemplo.nrows
@@ -347,7 +371,7 @@ def exemplo : DataFrame :=
 #eval exemplo.getCell 0 "nome"
 #eval exemplo.aggregate "idade" DataFrame.sum
 
--- Exemplo de filtragem (pessoas com idade > 26)
+-- Filtering example (people with age > 26)
 def exemploFiltrado : DataFrame :=
   exemplo.filter fun row =>
     match row.find? (fun (name, _) => name = "idade") with
@@ -357,13 +381,13 @@ def exemploFiltrado : DataFrame :=
 
 #eval toString exemploFiltrado
 
--- Exemplo de seleção de colunas
+-- Column selection example
 def exemploSelecionado : DataFrame :=
   exemplo.select ["nome", "salario"]
 
 #eval toString exemploSelecionado
 
--- Exemplo de mapeamento (aumentar salário em 10%)
+-- Mapping example (increase salary by 10%)
 def exemploMapeado : DataFrame :=
   exemplo.mapColumn "salario" fun val =>
     match val with
@@ -373,63 +397,59 @@ def exemploMapeado : DataFrame :=
 
 #eval toString exemploMapeado
 
--- Exemplos de uso (fora do namespace)
-def csvExample : String :=
+-- ============================================================================
+-- CSV EXAMPLES
+-- ============================================================================
+
+-- CSV example 1
+def csvExample1 : String :=
   "nome,idade,salario,ativo\nJoão,25,5000.5,true\nMaria,30,6000.0,false\nPedro,28,5500.75,true"
 
-def dfFromCsv : DataFrame := DataFrame.fromCSV csvExample
+def dfFromCsv1 : DataFrame := DataFrame.fromCSV csvExample1
 
--- Exemplo com dados mais simples
+-- CSV example 2
 def csvExample2 : String :=
   "produto,preco,quantidade,disponivel\nNotebook,2500,10,true\nMouse,45,100,true\nTeclado,150,0,false"
 
 def dfFromCsv2 : DataFrame := DataFrame.fromCSV csvExample2
 
--- Exemplo com dados missing
+-- CSV example with missing data
 def csvExample3 : String :=
   "nome,idade,cidade\nAna,25,São Paulo\nCarlos,,Rio de Janeiro\nLuiza,35,"
 
 def dfFromCsv3 : DataFrame := DataFrame.fromCSV csvExample3
 #eval toString dfFromCsv3
 
+-- CSV example 4
 def csvExample4 : String :=
-"
-nome,idade,salario,ativo
+"nome,idade,salario,ativo
 Lucas,32,4720.25,true
 Ana,27,5890.0,false
 Rafael,40,7200.75,true
 Beatriz,22,4100.0,true
-Carlos,35,6500.5,false
-"
+Carlos,35,6500.5,false"
 
 def dfFromCsv4 : DataFrame := DataFrame.fromCSV csvExample4
 #eval toString dfFromCsv4
+
 /-
-# DataFrames
-Um passo importante é a criação dos objetos que devem guardar nossos dados, sendo esses comumente chamados como
-`DataFrame`.
-## O que é um DataFrame ?
-Um DataFrame é uma estrutura de dados tabular contendo colunas nomeadas e dados associados
-Buscamos representar algo como:
+# DataFrames - Theoretical Background
+
+## What is a DataFrame?
+A DataFrame is a tabular data structure containing named columns and associated data.
+We seek to represent something like:
 ```lean
 structure DataFrame where
   columns : List String
-  lines : List ( List α )  -- (α ∈ Type) ?
+  lines : List (List α)  -- (α ∈ Type) ?
 ```
-Aqui nos deparamos com o primeiro problema, com essa estrutura como representar esse tipo de dado abaixo ?
 
-Coluna 1 (Int) | Coluna 2 ( Bool)
-             1 |            True
-             5 |           False
-          ...  |             ...
-
-Uma solução seria (α : String) entretanto acredito não ser uma solução formal
-
-# Category Theory and DataFrames
-Podemos tentar formalizar Dataframe como um Functor D
+## Category Theory and DataFrames
+We can try to formalize DataFrame as a Functor D:
   𝓓 : 𝒞 ⟶ FinSet
-Onde 𝒞 é uma categoria discreta onde os objetos são os nomes das colunas,
-e objetos distintos não tem morfismos entre si.
+Where 𝒞 is a discrete category where objects are column names,
+and distinct objects have no morphisms between them.
 
-A imagem de um objeto 𝒸 ∈ 𝒞 que representa a coluna é um conjunto finito de dados da coluna 𝓓(𝒸) ∈ FinSet
+The image of an object 𝒸 ∈ 𝒞 representing a column is a finite set
+of column data 𝓓(𝒸) ∈ FinSet.
 -/
