@@ -11,6 +11,12 @@ structure ℍ where -- Tranformações Gráficas
   s : Style
   g : Mat2Vec2
 
+instance : Coe Style ℍ where
+  coe st := ℍ.mk st (scale 1)
+
+instance : Coe Mat2Vec2 ℍ where
+  coe Ab := ℍ.mk {} Ab
+
 instance : Mul ℍ where
   mul x y := ℍ.mk (Style.comp x.s y.s) ( x.g )
 
@@ -24,13 +30,26 @@ instance : Functor F where
     | F.comp x y => F.comp (f x) (f y)
     | F.act h x => F.act h (f x)
 
-
-
+universe u
 inductive 𝕋 (α : Type u) where
   | pure : α → 𝕋 α
   | comp : 𝕋 α → 𝕋 α → 𝕋 α
   | act : ℍ → 𝕋 α → 𝕋 α
 -- deriving Repr, BEq
+
+/-
+def 𝕋.ulift {α β} (ulift : α → β) (a : 𝕋.{u+1} α) : 𝕋.{(max u v) + 1} β :=
+  match a with
+  | .pure x   => .pure (ulift x)
+  | .comp s t => .comp (𝕋.ulift ulift s) (𝕋.ulift ulift t)
+  | .act h t  => .act h (𝕋.ulift ulift t)
+-/
+/-
+def Tree.ulift (a : Tree.{u+1} Node ) : Tree.{(max u v) + 1} (Node) :=
+  match a with
+  | .pure x => .pure x.ulift
+  | .comp s t => .comp s.ulift t.ulift
+-/
 
 def 𝕋.map (f : α → β) (a : 𝕋 α) : 𝕋 β :=
   match a with
@@ -57,6 +76,7 @@ def freebind : (𝕋 α) → (α → 𝕋 β) → (𝕋 β) :=
 instance : Monad 𝕋 where
   pure := η
   bind := freebind
+
 
 /-
 def algF : F Float → Float
@@ -96,5 +116,47 @@ instance : HAdd Mark (𝕋 Mark) (𝕋 Mark) where
 
 instance : HAdd (𝕋 Mark) Mark (𝕋 Mark) where
   hAdd t m := 𝕋.comp t (𝕋.pure m)
+
+instance : HMul ℍ (𝕋 Mark.{u}) (𝕋 Mark.{u}) :=
+  ⟨fun h t => 𝕋.act h t⟩
+
+instance : HMul (𝕋 Mark.{u}) ℍ (𝕋 Mark.{u}) :=
+  ⟨fun t h => 𝕋.act h t⟩
+
+-- Coerção de Mark para 𝕋 Mark
+instance : Coe Mark.{u} (𝕋 Mark.{u}) where
+  coe m := 𝕋.pure m
+/-
+instance : HAdd (Tree Node.{u}) (Tree Node.{v}) (Tree Node.{max u v}) where
+  hAdd m n := Tree.comp m.ulift n.ulift
+
+instance : HAdd Node.{u} (Tree Node.{v}) (Tree Node.{max u v}) where
+  hAdd m n := Tree.comp (Tree.pure m.ulift) n.ulift
+
+instance : HAdd (Tree Node.{u}) Node.{v} (Tree Node.{max u v}) where
+  hAdd m n := Tree.comp m.ulift (Tree.pure n.ulift)
+
+instance : HAdd Node.{u} Node.{v} (Tree Node.{max u v}) where
+  hAdd m n := Tree.comp (Tree.pure m.ulift) (Tree.pure n.ulift)
+-/
+-- Agora as somas (HAdd) polimórficas em universos
+
+def 𝕋.ulift (a : 𝕋.{u+1} Mark ) : 𝕋.{(max u v) + 1} (Mark) :=
+  match a with
+  | .pure x => .pure x.ulift
+  | .comp s t => .comp s.ulift t.ulift
+  | .act h t  => .act h (𝕋.ulift t)
+
+instance : HAdd (𝕋 Mark.{u}) (𝕋 Mark.{v}) (𝕋 Mark.{max u v}) where
+  hAdd m n := 𝕋.comp m.ulift n.ulift
+  
+instance : HAdd Mark.{u} (𝕋 Mark.{v}) (𝕋 Mark.{max u v}) where
+  hAdd m n := 𝕋.comp (𝕋.pure m.ulift) n.ulift
+
+instance : HAdd (𝕋 Mark.{u}) Mark.{v} (𝕋 Mark.{max u v}) where
+  hAdd m n := 𝕋.comp (m.ulift) (𝕋.pure n.ulift)
+
+instance : HAdd Mark.{u} Mark.{v} (𝕋 Mark.{max u v}) where
+  hAdd m n := 𝕋.comp (𝕋.pure (Mark.ulift m)) (𝕋.pure (Mark.ulift n))
 
 end FreeMonad

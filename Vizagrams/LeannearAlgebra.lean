@@ -2,7 +2,7 @@ import Mathlib.Data.Matrix.auto
 import Mathlib.Data.Matrix.Notation
 
 open Matrix Fin
-def π : Float := 3.141592653589793
+def π : Float := 3.141592653589793 -- Aproximação para π em Float
 abbrev Vec2 := Fin 2 → Float
 /-# Fin
 Fin n representa o conjunto `Iₙ` ou `[n]`, isto é, os Naturais menores que n
@@ -28,25 +28,7 @@ def Vec2Norm (v : Vec2) : Float :=
 -- # Normalização de vetor
 def normalize (v : Vec2) : Vec2 :=
   let n := Vec2Norm v
-  if n == 0 then v else fun i => v i / n -- `==` igualdade booleana
-
-/- # Mesma discursão a respeito de FreeMonad 𝕋
-Em `transformation.lean` é definido o seguinte type
-
-structure G where
-  A : Float^[2,2]
-  b : Float^[2]
-
-E então são criados os
-
-def G.eval (f : G) (x : Float^[2]) := f.A * x + f.b
-def G.comp (f g : G) : G :=
-  { A := f.A * g.A, b := f.A * g.b + f.b }
-
-Entretanto, aqui optei por definir uma class `AffineMapLike` pois assim é possível ver
-uma maior relação com Category Theory (CT).
-𝓒 = ⟨ Vec2 , G em AffineMapClass ⟩
--/
+  if n == 0 then v else fun i => v i / n
 
 class AffineMapLike (G : Type) (V : Type) where
   eval : G → V → V
@@ -73,6 +55,16 @@ def matMul (A B : Mat2) : Mat2 :=
 
 def nullVec2 : Vec2 := ![0,0]
 
+def rotateVec (v : Vec2) (θ : Float) : Vec2 :=
+  let cosθ := Float.cos θ
+  let sinθ := Float.sin θ
+  ![cosθ * v 0 - sinθ * v 1, sinθ * v 0 + cosθ * v 1]
+
+def pointOnEllipse (θ rx ry : Float) : Vec2 :=
+  ![rx * Float.cos θ, ry * Float.sin θ]
+
+def atan2pi (v : Vec2) : Float :=
+  Float.atan2 (v 1) (v 0)
 
 
 /- # Instanciando AffineMapClass para Mat2Vec2
@@ -102,3 +94,6 @@ def rotate (θ : Float) : Mat2Vec2 :=
   let c := Float.cos θ
   let s := Float.sin θ
   { A := !![c, -s; s, c], b := ![0.0, 0.0] }
+
+def getCoordinates (v : Vec2) : String :=
+  s!"{v 0} {v 1}"

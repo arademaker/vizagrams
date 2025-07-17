@@ -9,3 +9,4 @@ import Vizagrams.FreeMonad
 import Vizagrams.Envelope
 import Vizagrams.VizBackend
 import Vizagrams.GraphicExpression
+import Vizagrams.DataFrame
