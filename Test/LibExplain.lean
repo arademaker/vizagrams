@@ -42,7 +42,7 @@ def circleₐ : Array Prim := circleₚ
 -- E como uma Mark ?
 #check ( circleₚ : Mark ) -- Mark.mk circleₚ : Mark
 def circleₘ : Mark := circleₚ
-#eval circleₘ -- Alterar toString de Prim
+-- #eval circleₘ -- Alterar toString de Prim
 /- Podemos fazer uma coerção Prim → Mark, mas ainda não podemos fazer Array Prim → Mark
 Verificar se faz sentido pensar em uma coe Array Prim → Mark pois o usuário trabalhará
 apenas com objetos do tipo Mark ou 𝕋 Mark
