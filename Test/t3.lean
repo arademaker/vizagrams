@@ -392,7 +392,7 @@ def preview (barPlot : Plot) (nrows : Nat := 5) : String :=
 end BarPlot
 
 -- ============================================================================
--- INTERFACE GLOBAL SIMPLIFICADA
+-- INTERFACE GLOBAL SIMPLIFICADA  
 -- ============================================================================
 
 -- Função global para uso rápido

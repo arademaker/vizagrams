@@ -1,4 +1,3 @@
--- Versão simplificada que funciona
 import Vizagrams
 import ProofWidgets.Data.Html
 
@@ -67,9 +66,9 @@ def createSvgFromData (data : List Float) : String :=
     let strokeColor := s!"rgb({strokeR},{strokeG},{strokeB})"
 
     let barSvg := s!"<rect x=\"{x}\" y=\"{y}\" width=\"40\" height=\"{height}\" fill=\"{fillColor}\" stroke=\"{strokeColor}\"/>"
-    let label  := s!"<text x=\"{x + 20}\" y=\"270\" text-anchor=\"middle\" font-size=\"12\">{h}</text>"
+    -- let label  := s!"<text x=\"{x + 20}\" y=\"270\" text-anchor=\"middle\" font-size=\"12\">{h}</text>"
 
-    acc ++ barSvg ++ "\n" ++ label ++ "\n"
+    acc ++ barSvg ++ "\n" --++ label ++ "\n"
   ) ""
 
   header ++ "\n" ++ bars ++ footer
@@ -78,8 +77,9 @@ def createSvgFromData (data : List Float) : String :=
 def createRealSvg (data : List Float) (filename : String) : IO Unit := do
   let svgContent := createSvgFromData data
   IO.FS.writeFile filename svgContent
-  IO.println s!"SVG salvo em: {filename}"
+  --IO.println s!"SVG salvo em: {filename}"
 
+-- Salva o .svg arquivo
 --#eval createRealSvg data₁ "barchart.svg"
 
 #html draw (bars.eval data₁)

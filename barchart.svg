@@ -1,12 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
 <rect x="30" y="185.483871" width="40" height="64.516129" fill="rgb(255,170,51)" stroke="rgb(127,85,25)"/>
-<text x="50" y="270" text-anchor="middle" font-size="12">1.000000</text>
 <rect x="90" y="101.612903" width="40" height="148.387097" fill="rgb(255,255,117)" stroke="rgb(127,127,58)"/>
-<text x="110" y="270" text-anchor="middle" font-size="12">2.300000</text>
 <rect x="150" y="204.838710" width="40" height="45.161290" fill="rgb(255,118,35)" stroke="rgb(127,59,17)"/>
-<text x="170" y="270" text-anchor="middle" font-size="12">0.700000</text>
 <rect x="210" y="50.000000" width="40" height="200.000000" fill="rgb(255,255,158)" stroke="rgb(127,127,79)"/>
-<text x="230" y="270" text-anchor="middle" font-size="12">3.100000</text>
 <rect x="270" y="230.645161" width="40" height="19.354839" fill="rgb(114,50,15)" stroke="rgb(57,25,7)"/>
-<text x="290" y="270" text-anchor="middle" font-size="12">0.300000</text>
 </svg>
