@@ -8,7 +8,7 @@ open ProofWidgets Svg
 open GraphicalMark
 open FreeMonad
 
-
+--   
 def data₁ : List Float :=  [1.0, 2.3, 0.7, 3.1, 0.3]
 
 def barPolygon (h : Float) (w : Float := 0.8) : Prim :=

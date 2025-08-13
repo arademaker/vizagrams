@@ -96,13 +96,13 @@ def diagram₂ : 𝕋 Mark := (t3x * circle₁) + (t2y * trianglered) + (rs * sq
 d = Circle() → Circle() ↑ Square()
 draw(d,height=100)
 -/
-#html draw (circle₁ → circle₁ ↑ square₁)
+#html draw₁ (circle₁ → circle₁ ↑ square₁)
 
 /-
 d = Circle() → Circle() ↑ Square()
 draw(d,height=100)
 -/
-#html draw (circle₁ →[0.5] circle₁ →[0.5] circle₁)
+#html draw₁ (circle₁ →[0.5] circle₁ →[0.5] circle₁)
 
 /-
 d = mapreduce(c->Circle(), (x,y)-> x → (T(0.5,0),y), 1:5)

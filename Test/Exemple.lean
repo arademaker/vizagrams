@@ -33,4 +33,4 @@ def bars : GraphicExpression (List Float):= {
   alg := algBar
 }
 
-#html draw ( bars.eval data₁)
+#html draw₁ ( bars.eval data₁)

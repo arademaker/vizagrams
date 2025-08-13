@@ -404,7 +404,7 @@ def bb_m₃ := boundingBox𝕋 ( twoCircles ↑[0.5] twoCircles)
 /- # Criando Marks
 Uma funcionalidade bastante útil e agradável é a capacidade de criar novos objetos gráficos.
 Para isso podemos observar o próprio código de Mark
-#eval !![1,2;3,4] + !![1,2;3,4]
+
 class MarkInterface (a : Type) where
   θ : a -> Array Prim
 
@@ -432,7 +432,8 @@ def Sierpinski₃ : sierpinski := {n := 3}
 instance : Coe sierpinski Mark where
   coe m := Mark.mk m
 
-#html draw Sierpinski₃
+#html draw₁ Sierpinski₃
+
 def TT : FreeMonad.ℍ := {s := {}, g := translate ![3,0]}
 #html draw (TT * (Sierpinski₃: FreeMonad.𝕋 Mark))
 
@@ -502,3 +503,4 @@ instance : Coe Arrow Mark where
 def Arrow₁ : Arrow := {p₁ := ![0,0], p₂ := ![1,0], tip := triangle, style := bigborder.comp borderToblue}
 #eval Arrow₁.p₂ - Arrow₁.p₁
 #html draw Arrow₁
+-- 

@@ -192,13 +192,12 @@ def greyRectangle : 𝕋 Mark :=
 def finalDrawing : 𝕋 Mark :=
   (centerCircle + greyRectangle)
 
-#html draw ((𝕋scale 0.5 * allArrows) + finalDrawing)
+#html draw₁ ((𝕋scale 0.5 * allArrows) + finalDrawing)
 -- #html draw (finalDrawing + allArrows)
 
 structure Tree where
   h : Float
 deriving Inhabited
-
 
 instance : MarkInterface Tree where
   θ t :=
@@ -218,10 +217,10 @@ instance : MarkInterface Tree where
 
     let angles : Array Float :=
       (Array.range 10).map (fun i => i.toFloat * 0.7)
-
     let smallLeaves : Array (𝕋 Mark) :=
       angles.map fun θ =>
-        𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5]) * (NewCircle 0.3 ![0,0] leafStyle : 𝕋 Mark)
+        𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5]) 
+        * (NewCircle 0.3 ![0,0] leafStyle : 𝕋 Mark)
 
     let leavesTotal : 𝕋 Mark :=
       smallLeaves.foldl (· + ·) bigLeaf
@@ -232,10 +231,9 @@ instance : MarkInterface Tree where
 instance : Coe Tree Mark where
   coe t := Mark.mk t
 
-def diagram : 𝕋 Mark :=
-  (Tree.mk 3) → Tree.mk 6
+def diagram : 𝕋 Mark :=  (Tree.mk 3) → Tree.mk 6
 
-#html draw diagram
+#html draw₁ diagram
 
 structure Forest where
   n : Nat

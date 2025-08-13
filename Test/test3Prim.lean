@@ -46,6 +46,7 @@ def slice : Prim :=   { geom := arc₁, style := SliceStyle }
     - ponto de controle: (200, 0)
     Essa configuração forma uma parábola suave ascendente.
 -/
+
 def qbez₁ : Geom :=
   .qbezier
     (![75,250]:Vec2) {fst := ![15 ,-10], snd := ![275,250] : Vec2 × Vec2}
@@ -58,12 +59,7 @@ def qbez₂ : Prim :=
 def qbez₃ : Prim :=
   { geom := qbez₁, style := SliceStyle }
 #html draw qbez₃
-/-- Curva Bézier cúbica com:
-    - pontos base: (100, -200) → (300, -200)
-    - pontos de controle:
-        • primeiro: (150, -100) — puxa o início para cima
-        • segundo:  (250, -300) — puxa o final para baixo
--/
+
 def cbez₁ : Geom :=
   .cbezier
     #[![100.0, -200.0], ![300.0, -200.0]]
