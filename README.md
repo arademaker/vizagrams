@@ -15,6 +15,8 @@ https://github.com/davibarreira/Vizagrams.jl
 
 This Lean implementation is still under development.
 
+## Instalation
+
 ## Package Features
 
 ## Quick Start
@@ -46,7 +48,7 @@ def d₃ := translate ![2,2] * d₂
   (d₁ + ( translate ![2,0.5] * d₂ : GraphicalPrimitive.Prim) ) 
   fr
 ```
--- image
+<img src="./assets/readme/imgs/ex1.png" align="center" height="200" />
 
 This is quite verbose, but it's more explicit about what's happening. You can achieve the same result like this:
 
@@ -59,4 +61,22 @@ def c₂ := NewPolygon #[![0,0], ![1,0], ![1,1], ![0,1]]
 #html draw (c₁ →[1] c₂ ) fr
 
 ```
--- image
+<img src="./assets/readme/imgs/ex2.png" align="center" height="200" />
+
+And we can compose this diagrams as a mark with other diagram
+
+```lean
+open ProofWidgets Svg
+
+def c₃ : FreeMonad.𝕋 GraphicalMark.Mark := (c₁ →[1] c₂)
+def c₄ := NewCircle 2.5 ![0,0] 
+  {fillColor := Color.mk 1 1 1, strokeColor := Color.mk 0 0 0, strokeWidth := Sty.StyleSize.px 1  }
+
+#html draw (c₄ + c₃ ) fr
+``` 
+
+<img src="./assets/readme/imgs/ex3.png" align="center" height="200" />
+
+## Contributing
+
+## Documentation
