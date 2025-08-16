@@ -48,7 +48,7 @@ def d₃ := translate ![2,2] * d₂
   (d₁ + ( translate ![2,0.5] * d₂ : GraphicalPrimitive.Prim) ) 
   fr
 ```
-<img src="./assets/readme/imgs/ex1.png" align="center" height="200" />
+<img src="./assets/readme/imgs/ex1.png" align="center" width="1000" />
 
 This is quite verbose, but it's more explicit about what's happening. You can achieve the same result like this:
 
@@ -61,7 +61,7 @@ def c₂ := NewPolygon #[![0,0], ![1,0], ![1,1], ![0,1]]
 #html draw (c₁ →[1] c₂ ) fr
 
 ```
-<img src="./assets/readme/imgs/ex2.png" align="center" height="200" />
+<img src="./assets/readme/imgs/ex2.png" align="center" width="1000" />
 
 And we can compose this diagrams as a mark with other diagram
 
@@ -75,7 +75,7 @@ def c₄ := NewCircle 2.5 ![0,0]
 #html draw (c₄ + c₃ ) fr
 ``` 
 
-<img src="./assets/readme/imgs/ex3.png" align="center" height="200" />
+<img src="./assets/readme/imgs/ex3.png" align="center" width="1000" />
 
 ## Contributing
 
