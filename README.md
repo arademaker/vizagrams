@@ -16,8 +16,11 @@ https://github.com/davibarreira/Vizagrams.jl
 This Lean implementation is still under development.
 
 ## Instalation
+To use Vizagrams in your Lean project, add it as a dependency in your lakefile.lean:
 
-## Package Features
+```
+require vizagrams from git "https://github.com/arademaker/vizagrams"
+```
 
 ## Quick Start
 
@@ -51,12 +54,16 @@ def d₃ := translate ![2,2] * d₂
 <img src="./assets/readme/imgs/ex1.png" align="center" width="1000" />
 
 This is quite verbose, but it's more explicit about what's happening. You can achieve the same result like this:
+(obs: Here we use a default Frame)
 
 ```lean
-open VizBackend
-
-def c₁ := NewCircle 1 ![0,0]
-def c₂ := NewPolygon #[![0,0], ![1,0], ![1,1], ![0,1]]
+open ProofWidgets Svg
+def c₁ := NewCircle 1 ![0,0] {fillColor := Color.mk 1 0 0}
+def c₂ := NewPolygon
+  #[![0,-0.5], ![1,-0.5], ![1,0.5], ![0,0.5]]
+  { strokeColor := Color.mk 0 1 0,
+    strokeWidth := Sty.StyleSize.px 5,
+    fillColor := Color.mk 0 0 1}
 
 #html draw (c₁ →[1] c₂ ) fr
 
@@ -76,7 +83,3 @@ def c₄ := NewCircle 2.5 ![0,0]
 ``` 
 
 <img src="./assets/readme/imgs/ex3.png" align="center" width="1000" />
-
-## Contributing
-
-## Documentation
