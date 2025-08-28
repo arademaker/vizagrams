@@ -1,9 +1,28 @@
+/-
+Copyright (c) 2025 Henrique Borges. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Henrique Borges
+-/
+import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Data.Matrix.auto
 import Mathlib.Data.Matrix.Notation
+
+/-!
+# Linear Algebra Foundations for Vizagrams
+This module defines the basic linear algebra types and operations used throughout the Vizagrams
+library. It establishes the `Vec2` type for 2D vectors over `Float`, provides standard typeclass
+instances for vector space operations, and defines core geometric transformations like rotation,
+scaling, and translation using `Mathlib`'s `LinearMap` and `AffineMap`.
+-/
 
 open Matrix Fin
 def π : Float := 3.141592653589793 -- Aproximação para π em Float
 abbrev Vec2 := Fin 2 → Float
+
+instance : Inner Float Vec2 where
+  inner v₁ v₂ := v₁ 0 * v₂ 0 + v₁ 1 * v₂ 1
+
+notation "⟪" x "," y "⟫" => inner Float x y
 /-# Fin
 Fin n representa o conjunto `Iₙ` ou `[n]`, isto é, os Naturais menores que n
 podemos usar `Fin n` para indexar vetores com n posições
@@ -20,6 +39,8 @@ uma matriz é uma função que, dado um índice de linha `m` e um de coluna `n`,
 retorna o elemento daquela posição
 -/
 -- Usar `!![ ; ]` vem de Matrix.Notation
+
+
 
 -- # Definir Norma de vetor
 def Vec2Norm (v : Vec2) : Float :=
@@ -41,6 +62,8 @@ structure Mat2Vec2 where
 deriving Repr
 
 -- # Produto de Matrizes e Vetores em Float²
+
+-- **Remover dotProd**
 def dotProd (v₁ v₂ : Vec2) : Float :=
   v₁ 0 * v₂ 0 + v₁ 1 * v₂ 1
 
@@ -97,3 +120,14 @@ def rotate (θ : Float) : Mat2Vec2 :=
 
 def getCoordinates (v : Vec2) : String :=
   s!"{v 0} {v 1}"
+
+/-
+-- Testes
+private def v : Vec2 := ![1,1]
+#eval v + v
+#eval 2.0 • v
+private def v₁ : Vec2 := ![1.0, 2.0]
+private def v₂ : Vec2 := ![3.0, 4.0]
+#eval (inner Float v₁ v₂)
+#eval ⟪ v₁ , v₂ ⟫
+-/
