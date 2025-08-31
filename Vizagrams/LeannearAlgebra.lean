@@ -24,15 +24,12 @@ open Matrix Fin
 
 def π : Float := 3.141592653589793 -- Aproximação para π em Float
 
-/-# Fin
-Fin n representa o conjunto `Iₙ` ou `[n]`, isto é, os Naturais menores que n
-podemos usar `Fin n` para indexar vetores com n posições
-`Fin 2 → ℝ²` é o vetor de duas entradas reais
--/
 abbrev Vec2 := Fin 2 → Float
 
 def e₁ : Vec2 := ![1 ,0]
 def e₂ : Vec2 := ![0 ,1]
+
+def nullVec2 : Vec2 := ![0.0 ,0.0]
 
 instance : Inner Float Vec2 where
   inner v₁ v₂ := v₁ 0 * v₂ 0 + v₁ 1 * v₂ 1
@@ -61,15 +58,6 @@ def projection (v₁ v₂ : Vec2) : Vec2 := (⟪v₁, v₂⟫ / ‖v₂‖²) �
 
 def perpendicular (v : Vec2) : Vec2 := ![- (v 1), v 0]
 
-/-# Mat2
-`Defs.lean:` (Mathlib.Data.Matrix)
-def Matrix (m : Type u) (n : Type u') (α : Type v) : Type max u u' v :=
-  m → n → α
-
-uma matriz é uma função que, dado um índice de linha `m` e um de coluna `n`,
-retorna o elemento daquela posição
--/
--- Usar `!![ ; ]` vem de Matrix.Notation
 abbrev Mat2 := Matrix (Fin 2) (Fin 2) Float
 
 instance : One Mat2 where
@@ -84,11 +72,17 @@ def mulVec (A : Mat2) (v : Vec2) : Vec2 :=
   fun i => (A i 0) * v 0 + (A i 1) * v 1
 
 infixl: 65 "@" => mulVec
--- Aqui definimos um Mat2Vec2, isto é, um tipo para representar x ↦ Ax + B
+
 structure Mat2Vec2 where
   A : Mat2
   b : Vec2
 deriving Repr
+
+instance : Coe Vec2 Mat2Vec2 where
+  coe v := {A := 1 , b := v}
+
+instance : Coe Mat2 Mat2Vec2 where
+  coe M := {A := M, b := nullVec2}
 
 class AffineMapLike (G : Type) (V : Type) where
   eval : G → V → V
@@ -98,24 +92,28 @@ instance : AffineMapLike Mat2Vec2 Vec2 where
   eval f x := mulVec f.A x + f.b
   compose f g := { A := f.A ∘ₘ g.A , b := (f.A @ g.b) + f.b }
 
-infixl:75 " ▷ " => AffineMapLike.eval
+infixr:75 " ▷ " => AffineMapLike.eval
 infixl:80 " ∘ₐ " => AffineMapLike.compose
 
-def nullVec2 := ![0.0 ,0.0]
-
-/-- Creates a translation transformation. -/
 def translate (t : Vec2) : Mat2Vec2 :=
   { A := 1, b := t }
 
-/-- Creates a uniform scaling transformation. -/
 def scale (s : Float) : Mat2Vec2 :=
   { A := !![s, 0.0; 0.0, s], b := nullVec2 }
 
-/-- Creates a rotation transformation around the origin. -/
 def rotate (θ : Float) : Mat2Vec2 :=
   let c := Float.cos θ
   let s := Float.sin θ
   { A := !![c, -s; s, c], b := nullVec2 }
+
+def rotateVec2 ( v : Vec2) (θ : Float) : Vec2 :=
+  (rotate θ) ▷ v
+
+def pointOnEllipse (θ rx ry : Float) : Vec2 :=
+  ![rx * Float.cos θ, ry * Float.sin θ]
+
+def atan2pi (v : Vec2) : Float :=
+  Float.atan2 (v 1) (v 0)
 
 end LinearAlgebra
 /-
