@@ -1,17 +1,31 @@
 /-
 Copyright (c) 2025 Henrique Borges. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Henrique Borges
+Authors: Davi Barreira, Henrique Borges
 -/
 import Vizagrams.LeannearAlgebra
 /-!
-# Geometric Primitives
+# Geometric Primitives for Vizagrams
+
+This module defines the geometric primitives used in the Vizagrams library.
+It introduces two key representations for geometric shapes:
+- `Geom`: A **semantic** representation, which is intuitive and easy for users to construct
+  (e.g., a circle is defined by its center and radius).
+- `CovGeom`: A **covariant** representation, where shapes are defined entirely by points (`Vec2`).
+  This form is mathematically elegant and makes applying affine transformations trivial.
+
+The module provides functions to convert between these two representations and defines the action
+of affine transformations on both types.
 -/
 
 namespace GeometricPrimitive
 
 open LinearAlgebra
 
+/--
+A semantic representation of a geometric primitive.
+This form is easy for users to construct and reason about.
+-/
 inductive Geom where
   | line     (src trg : Vec2)
   | circle   (r : Float) (c : Vec2)
@@ -26,6 +40,11 @@ inductive Geom where
   | cbezier  (Moveto : Vec2) (CbezierCurveto : Vec2 × Vec2 × Vec2)
 deriving Repr
 
+/--
+A covariant representation of a geometric primitive.
+All components are points (`Vec2`), which transform uniformly ("covariantly").
+This form is ideal for applying transformations.
+-/
 inductive CovGeom where
   | line     (src trg : Vec2)
   | circle   (p1 p2 : Vec2)
@@ -40,6 +59,7 @@ inductive CovGeom where
   | cbezier  (Moveto : Vec2) (CbezierCurveto : Vec2 × Vec2 × Vec2)
 deriving Repr
 
+/-- Converts a semantic `Geom` to its covariant representation `CovGeom`. -/
 def ϕ : Geom → CovGeom
   | .line src trg          => .line src trg
   | .circle r c            => .circle (c - ![r, 0]) (c + ![r, 0])
@@ -60,6 +80,7 @@ def ϕ : Geom → CovGeom
   | .qbezier m cv          => .qbezier m cv
   | .cbezier bpts cpts     => .cbezier bpts cpts
 
+/-- Converts a covariant `CovGeom` back to its semantic representation `Geom`. -/
 def ψ : CovGeom → Geom
   | .line src trg          => .line src trg
   | .circle p1 p2          =>
@@ -67,9 +88,8 @@ def ψ : CovGeom → Geom
       let c := 0.5 • (p1 + p2)
       .circle r c
   | .ellipse center pAxisX pAxisY =>
-    -- Calcula os raios medindo a distância do centro a cada ponto dos eixos
-    let rx := ‖(pAxisX - center)‖
-    let ry := ‖(pAxisY - center)‖
+      let rx := ‖(pAxisX - center)‖
+      let ry := ‖(pAxisY - center)‖
     .ellipse rx ry center
   | .rect corner p         =>
       let wh := p - corner
@@ -90,6 +110,7 @@ def ψ : CovGeom → Geom
   | .qbezier m cv          => .qbezier m cv
   | .cbezier bpts cpts     => .cbezier bpts cpts
 
+/-- Defines the action of a `Mat2Vec2` transformation on a `CovGeom`. -/
 instance : HMul Mat2Vec2 CovGeom CovGeom where
   hMul g p := match p with
     | .line src tgt      => .line (g ▷ src) (g ▷ tgt)
@@ -107,6 +128,10 @@ instance : HMul Mat2Vec2 CovGeom CovGeom where
     | .cbezier m (p1, p2, p3) =>
         .cbezier (g ▷ m) (g ▷ p1, g ▷ p2, g ▷ p3)
 
+/--
+Defines the action of a `Mat2Vec2` transformation on a `Geom`.
+This is done by converting to `CovGeom`, applying the transformation, and converting back.
+-/
 instance : HMul Mat2Vec2 Geom Geom where
   hMul g p := ψ (g * (ϕ p))
 
