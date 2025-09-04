@@ -26,4 +26,6 @@ def v₂ : Vec2 := ![2.0, 6.0]
 
 def A₁ : Mat2 := !![2.0 ,6.0 ;7.0 ,3.0]
 #check A₁
-#eval A₁
+#eval A₁ ∘ₘ 1
+
+#eval rotate (π) ▷ v₁
