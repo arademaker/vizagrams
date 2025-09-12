@@ -260,5 +260,6 @@ notation:70 A " →[" g "] " B => hStackRightMarks A B g
 notation:70 A " ←[" g "] " B => hStackLeftMarks  A B g
 notation:70 A " ↑[" g "] " B => vStackUpMarks    A B g
 notation:70 A " ↓[" g "] " B => vStackDownMarks  A B g
+notation:70 A " ↗[" v ", " g "]" B => A + envelopePositionMarks A v B g
 
 end Envelope

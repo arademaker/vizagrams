@@ -71,24 +71,6 @@ def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
     let d := s!"M {getCoordinates m } Q {getCoordinates q.fst} {getCoordinates q.snd}"
     Shape.path d
 
-/-  | .qbezier bpts cpts =>
-      if h : bpts.size ≥ 2 ∧ cpts.size == bpts.size - 1 then
-        let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y
-        let start := vecToPoint bpts[0]! fr
-        let (x0, y0) := start.toAbsolute
-        let y0 := flipY y0
-        let d :=
-          List.range (bpts.size - 1) |>.map (fun i =>
-            let p1 := vecToPoint (bpts[i+1]!) fr
-            let c  := vecToPoint (cpts[i]!) fr
-            let (x1, y1) := p1.toAbsolute
-            let (cx, cy) := c.toAbsolute
-            s!"Q {cx} {flipY cy}, {x1} {flipY y1}"
-          ) |>.foldl (· ++ " " ++ ·) ("M " ++ toString x0 ++ " " ++ toString y0)
-        Shape.path d
-      else
-        Shape.path ""
--/
   | .cbezier bpts cpts =>
       if h : bpts.size ≥ 2 ∧ cpts.size == 2 * (bpts.size - 1) then
         let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y

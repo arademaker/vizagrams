@@ -48,7 +48,7 @@ def 𝕋.ulift {α β} (ulift : α → β) (a : 𝕋.{u+1} α) : 𝕋.{(max u v)
 def Tree.ulift (a : Tree.{u+1} Node ) : Tree.{(max u v) + 1} (Node) :=
   match a with
   | .pure x => .pure x.ulift
-  | .comp s t => .comp s.ulift t.ulift
+  | .comp s t => .comp s.ulift t.ulift 
 -/
 
 def 𝕋.map (f : α → β) (a : 𝕋 α) : 𝕋 β :=
