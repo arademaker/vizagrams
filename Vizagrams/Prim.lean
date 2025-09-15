@@ -131,23 +131,23 @@ def mk (geom : Geom) (style : Style := {}) : Prim :=
   ⟨geom, style⟩
 
 /-- Create a circle primitive with specified radius, center, and optional style. -/
-def circle (r : Float) (c : Vec2 := ![0,0]) (style : Style := {}) : Prim :=
+def Prim.circle (r : Float) (c : Vec2 := ![0,0]) (style : Style := {}) : Prim :=
   mk (Geom.circle r c) style
 
 /-- Create a line primitive with specified endpoints and optional style. -/
-def line (src trg : Vec2) (style : Style := {}) : Prim :=
+def Prim.line (src trg : Vec2) (style : Style := {}) : Prim :=
   mk (Geom.line src trg) style
 
 /-- Create a rectangle primitive with specified corner, dimensions, and optional style. -/
-def rect (corner : Vec2) (width height : Float) (style : Style := {}) : Prim :=
+def Prim.rect (corner : Vec2) (width height : Float) (style : Style := {}) : Prim :=
   mk (Geom.rect corner width height) style
 
 /-- Create a polygon primitive with specified vertices and optional style. -/
-def polygon (points : Array Vec2) (style : Style := {}) : Prim :=
+def Prim.polygon (points : Array Vec2) (style : Style := {}) : Prim :=
   mk (Geom.polygon points) style
 
 /-- Create a text primitive with specified position, content, size, and optional style. -/
-def text (pos : Vec2) (content : String) (size : Float := 1.0) (style : Style := {}) : Prim :=
+def Prim.text (pos : Vec2) (content : String) (size : Float := 1.0) (style : Style := {}) : Prim :=
   mk (Geom.text pos content size) style
 
 end GraphicalPrimitive
