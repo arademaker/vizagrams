@@ -38,7 +38,7 @@ structure Prim where
   geom : Geom
   /-- The visual styling (colors, stroke width, etc.) -/
   style : Style
-deriving Repr
+deriving Repr, Inhabited
 
 /-- A single primitive can be treated as an array containing just that primitive. -/
 instance : Coe Prim (Array Prim) where

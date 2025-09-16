@@ -38,7 +38,7 @@ inductive Geom where
   | arc      (rx ry : Float) (c : Vec2) (rot init final : Float)
   | qbezier  (Moveto : Vec2) (QbezierCurveto : Vec2 × Vec2)
   | cbezier  (Moveto : Vec2) (CbezierCurveto : Vec2 × Vec2 × Vec2)
-deriving Repr
+deriving Repr, Inhabited
 
 /--
 A covariant representation of a geometric primitive.

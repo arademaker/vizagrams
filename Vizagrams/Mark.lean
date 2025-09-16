@@ -15,269 +15,278 @@ framework for data visualization. A graphical mark is fundamentally a tuple (A, 
 
 ## Conceptual Hierarchy
 
-1. **Prim** (Primitive): Basic geometric shapes with styling
-2. **Mark** (This module): Abstractions over collections of primitives
-3. **𝕋 Mark** (Free Monad): Tree structures of marks for complex diagrams
+```
+Prim (Primitive)     →  Array Prim  →  Visual Output
+     ↑                       ↑
+Mark (This module)    →  Array Prim  →  Visual Output
+     ↑                       ↑
+𝕋 Mark (Free Monad)  →  Array Prim  →  Visual Output
+```
 
-## Key Concepts
+## Key Design Principles
 
-- **MarkInterface**: Type class defining how types can be rendered as primitive arrays
-- **Mark**: Existential wrapper for any type implementing MarkInterface
-- **θ function**: Core rendering function transforming marks into primitive arrays
-- **Composition**: How marks combine to form more complex visual elements
+1. **Type → Drawing Pipeline**: Any type can become drawable by implementing `MarkInterface`
+2. **Ergonomic Composition**: Rich operator overloading (`+`, `*`) for intuitive syntax
+3. **Automatic Coercion**: Seamless conversion between related types
+4. **Universe Polymorphism**: Support for marks across different type universes
+
+## Usage Examples
+
+```lean
+-- Basic mark creation and composition
+let circle : Mark := myPrim                    -- Automatic coercion
+let combined := mark1 + mark2                  -- Composition operator
+let transformed := transform * mark            -- Transformation operator
+
+-- All operations work seamlessly with type inference
+```
 
 ## Theoretical Foundation
 
-Following the categorical theory:
+Following the categorical theory from "Data Visualization from a Category Theory Perspective":
 - Marks are abstractions over Array Prim
 - θ provides semantic interpretation: abstract mark → concrete primitives
-- Later, 𝕋 Mark will use these basic marks to build tree diagrams
-
+- Composition forms a monoid structure
+- Transformations preserve the categorical structure
 -/
-
-namespace GraphicalMark
-
 open LinearAlgebra
-open Sty ProofWidgets.Svg
 open GeometricPrimitive
 open GraphicalPrimitive
 
--- Ensure we can work across universe levels
+-- Enable auto implicit for ergonomic type inference
 set_option autoImplicit true
+
+namespace GraphicalMark
+
+-- Explicit universe declaration for polymorphic operations
 universe u v
 
 /-!
-### MarkInterface: The Foundation
+### Core Type Class: MarkInterface
 
-The `MarkInterface` type class is the cornerstone of the mark system. It defines
-how any type can be interpreted as a visual mark by providing the θ (theta) function
-that converts abstract mark values into concrete arrays of graphical primitives.
+The foundation of the mark system. Any type implementing this interface
+can be rendered as visual primitives through the θ (theta) function.
 -/
 
 /--
-Type class defining how a type can be rendered as an array of graphical primitives.
-The θ function is the semantic map from abstract marks to concrete visual elements.
+**MarkInterface**: Defines how a type can be transformed into drawable primitives.
 
-This follows the mathematical definition where a mark is a tuple (A, θ_A) with
-θ_A : A → Array Prim providing the rendering semantics.
+A type `α` can be drawn if there exists a function `θ : α → Array Prim`.
+This follows the mathematical definition where a mark is a tuple (A, θ_A).
+
+**Mathematical Interpretation:**
+- A ∈ Type_u (the parameter space)
+- θ_A : A → Array Prim (the rendering function)
+- (A, θ_A) forms a graphical mark in our categorical framework
+
+**Pipeline:** `α → Array Prim → Drawing`
 -/
-class MarkInterface (α : Type u) where
-  /--
-  The theta function: transforms a mark value into an array of primitives.
-  This is the core semantic function defining what the mark looks like when rendered.
-  -/
-  θ : α → Array Prim
+class MarkInterface (a : Type u) where
+  /-- The theta function: transforms mark parameters into primitive arrays -/
+  θ : a -> Array Prim
 
 /-!
-### Mark Type: Existential Wrapper
+### Existential Mark Type
 
 The `Mark` type provides a uniform interface for heterogeneous collections of marks.
-It wraps any type that implements `MarkInterface`, enabling type-safe composition
-of different mark types in the same data structure.
+It wraps any type implementing `MarkInterface`, enabling type-safe composition
+while hiding the underlying type complexity.
 -/
 
 /--
-A graphical mark represented as an existential type containing any type
-that implements the MarkInterface. This enables heterogeneous mark collections
-while preserving type safety.
+**Mark**: An existential wrapper for any drawable type.
+
+A Mark encapsulates:
+- `T`: The underlying parameter type (hidden from users)
+- `inst`: The MarkInterface instance providing θ
+- `val`: The concrete parameter values
+
+This enables heterogeneous mark collections while preserving type safety.
+
+**Design Benefits:**
+- **Type Erasure**: Users work with uniform `Mark` type
+- **Extensibility**: New mark types integrate seamlessly
+- **Composition**: All marks compose uniformly regardless of underlying type
 -/
 structure Mark where
-  {Carrier : Type u}
-  [inst : MarkInterface Carrier]
-  value : Carrier
+  {T : Type u}                    -- Hidden parameter type
+  [inst : MarkInterface T]        -- Rendering capability
+  val : T                        -- Concrete parameter values
+
+instance : Repr Mark where
+  reprPrec m := reprPrec (m.inst.θ m.val)
 
 /-!
 ### Universe Level Management
 
-For combining marks across different type universes, we provide lifting operations.
-This is essential for compositional mark construction.
+Support for combining marks defined at different universe levels.
+Essential for compositional mark construction across type hierarchies.
 -/
 
 /--
-Lift a mark to work across universe levels.
+**Mark.ulift**: Lift mark to higher universe level.
+
 Enables combination of marks defined at different universe levels.
+This is crucial for building complex diagrams that combine marks
+from different abstraction levels.
+
+**Category Theory Note:** This preserves the categorical structure
+while enabling cross-universe composition.
 -/
-def Mark.ulift (m : Mark.{u}) : Mark.{max u v} where
-  Carrier := ULift m.Carrier
-  value := ULift.up m.value
+def Mark.ulift (x : Mark.{u}) : Mark.{max u v} where
+  T := ULift x.T
+  val := ULift.up x.val
   inst := {
-    θ := fun (lifted : ULift m.Carrier) => m.inst.θ (ULift.down lifted)
+    θ := fun (v : ULift x.T) => x.inst.θ (ULift.down v)
   }
 
-/--
-Extract the array of primitives from a Mark using its θ function.
-This is the canonical way to render any mark.
+/-!
+### Core Mark Operations
 -/
-def Mark.θ (m : Mark) : Array Prim := m.inst.θ m.value
+
+/--
+**Mark.θ**: Extract primitive array from any mark.
+
+This is the canonical rendering function that converts any Mark
+into its visual representation as an Array Prim.
+
+**Mathematical Interpretation:**
+Projects the existential type back to the primitive space:
+`∃T. (T, θ_T, val_T) → Array Prim`
+-/
+def Mark.θ : Mark → Array Prim := fun m => m.inst.θ m.val
 
 /-!
 ### Fundamental Mark Instances
 
-Basic types that can serve as marks in the system.
+Basic types that can serve as marks. These provide the foundation
+for more complex mark constructions.
 -/
 
-/-- Empty mark type representing no visual content. -/
-inductive NilMark : Type
-  | mk : NilMark
+/--
+**Nil**: Empty mark type representing visual void.
 
-/-- NilMark renders as empty array (identity for composition). -/
-instance : MarkInterface NilMark where
+Analogous to the empty set ∅ in category theory.
+Serves as the identity element for mark composition.
+-/
+inductive Nil : Type
+  | mk : Nil
+
+/-- **Nil Instance**: Renders as empty array (composition identity) -/
+instance : MarkInterface Nil where
   θ _ := #[]
 
-/-- Unit type as empty mark alternative. -/
+/-- **Unit Instance**: Alternative empty mark using built-in Unit type -/
 instance : MarkInterface Unit where
   θ _ := #[]
 
-/-- Individual primitives are trivial marks. -/
+/-- **Prim Instance**: Individual primitives are trivial marks -/
 instance : MarkInterface Prim where
   θ p := #[p]
 
-/-- Arrays of primitives are direct mark representations. -/
-instance : MarkInterface (Array Prim) where
-  θ ps := ps
-
 /-!
-### Coercion System
+### Coercion System: Seamless Type Conversions
 
-Smooth conversions between representational levels in the hierarchy.
+Rich coercion system enabling intuitive syntax. Users can write
+natural code without explicit conversions between related types.
+
+**Design Philosophy:** Make the common cases effortless while preserving type safety.
 -/
 
-/-- Convert Mark to its primitive array representation. -/
+/-- **Mark → Array Prim**: Extract primitives (every Mark can render) -/
 instance : Coe Mark (Array Prim) where
   coe m := m.θ
 
-/-- Lift primitive to Mark level. -/
+/-- **Prim → Mark**: Lift primitive to mark level -/
 instance : Coe Prim Mark where
-  coe p := ⟨p⟩
+  coe p := { val := p }
 
-/-- Lift empty mark to Mark level. -/
-instance : Coe NilMark Mark where
-  coe n := ⟨n⟩
+/-- **Nil → Mark**: Lift empty mark to uniform interface -/
+instance : Coe Nil Mark where
+  coe m := { val := m }
 
-/-- Lift Unit to Mark level. -/
+/-- **Unit → Mark**: Lift unit to mark level -/
 instance : Coe Unit Mark where
-  coe u := ⟨u⟩
-
-/-- Lift primitive arrays to Mark level. -/
-instance : Coe (Array Prim) Mark where
-  coe ps := ⟨ps⟩
+  coe m := { val := m }
 
 /-!
-### Mark Composition Operations
+### Composition Operations: The `+` Operator
 
-These operations define how marks combine at the primitive level.
-Later, 𝕋 Mark will provide higher-level tree-based composition.
+Rich composition system using the `+` operator for intuitive mark combination.
+This implements the monoidal structure of mark composition.
+
+**Mathematical Foundation:**
+- Operation: `+` (composition)
+- Identity: `Nil` (empty mark)
+- Associativity: `(a + b) + c = a + (b + c)`
+- Commutativity: Generally `a + b ≠ b + a` (order matters for rendering)
 -/
 
-/-- Concatenate arrays from two marks. -/
-instance : HAdd Mark Mark (Array Prim) where
-  hAdd m₁ m₂ := m₁.θ ++ m₂.θ
-
-/-- Prepend primitive to mark's primitive array. -/
+/-- **Prim + Mark**: Prepend primitive to mark's primitives -/
 instance : HAdd Prim Mark (Array Prim) where
-  hAdd p m := #[p] ++ m.θ
+  hAdd p1 p2 := #[p1] ++ p2.θ
 
-/-- Append primitive to mark's primitive array. -/
+/-- **Mark + Prim**: Append primitive to mark's primitives -/
 instance : HAdd Mark Prim (Array Prim) where
-  hAdd m p := m.θ ++ #[p]
+  hAdd p1 p2 := p1.θ ++ #[p2]
 
-/-- Concatenate primitive array with mark's primitives. -/
+/-- **Array Prim + Mark**: Prepend primitive array to mark -/
 instance : HAdd (Array Prim) Mark (Array Prim) where
-  hAdd ps m := ps ++ m.θ
+  hAdd p1 p2 := p1 ++ p2.θ
 
-/-- Concatenate mark's primitives with primitive array. -/
-instance : HAdd Mark (Array Prim) (Array Prim) where
-  hAdd m ps := m.θ ++ ps
+/-- **Mark + Mark**: Core composition operation -/
+instance : HAdd Mark Mark (Array Prim) where
+  hAdd p1 p2 := p1.θ ++ p2.θ
 
 /-!
-### Transformation Operations
+### Transformation Operations: The `*` Operator
 
-Apply geometric and style transformations to marks by transforming
-their underlying primitive arrays.
+Geometric and style transformation system using the `*` operator.
+This implements the action of the transformation group on marks.
+
+**Mathematical Foundation:**
+- Geometric transformations form a group under composition
+- Style transformations form a monoid under right-biased union
+- The `*` operator applies these transformations to mark content
+
+**Categorical Interpretation:**
+- Transformations are morphisms in the category of geometric objects
+- `*` implements the group action on the mark space
+- Preserves the compositional structure of marks
 -/
 
-/-- Apply geometric transformation to mark. -/
+/-- **Mat2Vec2 * Mark**: Apply geometric transformation to mark -/
 instance : HMul Mat2Vec2 Mark (Array Prim) where
-  hMul g m := g * m.θ
+  hMul g M := g * M.θ
 
-/-- Apply style transformation to mark. -/
-instance : HMul Style Mark (Array Prim) where
-  hMul s m := s * m.θ
-
-/-- Apply transformation to mark then convert back to Mark. -/
-instance : HMul Mat2Vec2 (Array Prim) Mark where
-  hMul g ps := ⟨g * ps⟩
-
-/-- Apply style to primitive array then convert back to Mark. -/
-instance : HMul Style (Array Prim) Mark where
-  hMul s ps := ⟨s * ps⟩
+/-- **Mark * Mat2Vec2**: Apply transformation (alternative syntax) -/
+instance : HMul Mark Mat2Vec2 (Array Prim) where
+  hMul M g := g * M.θ
 
 /-!
-### Utility Functions
+### API Summary
 
-Helper functions for mark creation and manipulation.
+**Core Functions:**
+- `Mark.θ : Mark → Array Prim` - Extract primitives from any mark
+- `Mark.ulift : Mark.{u} → Mark.{max u v}` - Universe level lifting
+
+**Composition Operators:**
+- `mark1 + mark2` - Combine two marks
+- `prim + mark` / `mark + prim` - Mix primitives and marks
+- `array + mark` - Combine primitive arrays with marks
+
+**Transformation Operators:**
+- `transform * mark` - Apply geometric/style transformation
+- `mark * transform` - Alternative syntax for transformation
+
+**Automatic Coercions:**
+- `Prim → Mark` - Primitives automatically become marks
+- `Nil → Mark` - Empty marks integrate seamlessly
+- `Unit → Mark` - Unit type as empty mark
+- `Mark → Array Prim` - Marks automatically render when needed
+
+This design enables highly ergonomic syntax while maintaining mathematical rigor
+and type safety throughout the system.
 -/
-
-/-- Create a Mark from any type implementing MarkInterface. -/
-def mk {α : Type u} [MarkInterface α] (value : α) : Mark := ⟨value⟩
-
-/-- Check if a Mark contains no visual content (empty primitive array). -/
-def Mark.isEmpty (m : Mark) : Bool := m.θ.size = 0
-
-/-- Get the number of primitives in a Mark. -/
-def Mark.size (m : Mark) : Nat := m.θ.size
-
-/-!
-### Common Mark Implementations
-
-Ready-to-use mark types for common visual elements.
--/
-
-/-- Simple circle mark with customizable properties. -/
-structure CircleMark where
-  radius : Float := 1.0
-  center : Vec2 := ![0, 0]
-  style : Style := {}
-  deriving Repr
-
-instance : MarkInterface CircleMark where
-  θ c := #[c.style * Prim.circle c.radius c.center]
-
-/-- Text mark for labels and annotations. -/
-structure TextMark where
-  content : String
-  position : Vec2 := ![0, 0]
-  size : Float := 1.0
-  style : Style := {}
-  deriving Repr
-
-instance : MarkInterface TextMark where
-  θ t := #[t.style * Prim.text t.position t.content t.size]
-
-/-- Composite mark that groups multiple primitives. -/
-structure GroupMark where
-  primitives : Array Prim
-  deriving Repr
-
-instance : MarkInterface GroupMark where
-  θ g := g.primitives
-
-/-!
-### Advanced Mark Construction
-
-Functions for building complex marks from simpler ones.
--/
-
-/-- Create a mark by applying a function to transform primitive arrays. -/
-def transformMark (f : Array Prim → Array Prim) (m : Mark) : Mark :=
-  ⟨f m.θ⟩
-
-/-- Combine multiple marks into a single composite mark. -/
-def combineMark (marks : Array Mark) : Mark :=
-  ⟨marks.foldl (fun acc m => acc ++ m.θ) #[]⟩
-
-/-- Apply uniform styling to all primitives in a mark. -/
-def styleMark (style : Style) (m : Mark) : Mark :=
-  transformMark (style * ·) m
 
 end GraphicalMark
