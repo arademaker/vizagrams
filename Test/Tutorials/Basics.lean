@@ -6,6 +6,8 @@ open GraphicalPrimitive
 open ProofWidgets Svg
 open GraphicalMark
 open FreeMonad
+open LinearAlgebra
+open Envelope
 
 -- commit version 5da23d52696673c7b487253bb427959bdf2aa413 Vizagrams.jl
 -- 1. Drawing a simple diagram
@@ -63,9 +65,9 @@ draw(d,height=100)
 -/
 def t3x : ℍ := ℍ.mk {} ( translate ![3,0])
 def t2y : ℍ := ℍ.mk {} ( translate ![0,2])
-def rs : ℍ := ℍ.mk {} ((rotate (π/10)) ∘ (scale 2))
+def rs : ℍ := ℍ.mk {} (rotate (π/10) ∘ₜ scale 2)
 
-#html draw ( (t3x * circle₁) + (t2y * trianglered) + (rs * squaregreen))
+#html draw₁ ( (t3x * circle₁) + (t2y * trianglered) + (rs * squaregreen))
 
 /-
 d = S(:fill=>:blue)*(T(3,0)Circle() + T(0,2)RegularPolygon(n=3) +R(π/10)U(2)Square()) + T(2,-2)S(:stroke=>:red,:strokeWidth=>0.5)Line([[0,0],[3,0],[3,3]])
@@ -124,7 +126,7 @@ draw(d,height=100)
 
 def text : 𝕋 Mark := NewText "My Text"
 
-#html draw text
+#html draw₁ text
 
 /-
 cross = S(:strokeWidth=>0.1)*(Line([[-3,0],[3,0]]) + R(π/2)Line([[-3,0],[3,0]]))
@@ -142,4 +144,4 @@ draw(d,height=100)
 -/
 def exp_x : 𝕋 Mark := NewText "eˣ = ∑ xⁿ/n! = 1 + x + x²/2 + ... " ![-2,0] 0.75
 
-#html draw exp_x
+#html draw₁ exp_x

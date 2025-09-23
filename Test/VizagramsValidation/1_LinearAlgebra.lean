@@ -13,6 +13,7 @@ def v₁ : Vec2 := ![5.0 ,3.0]
 #eval ⟪ v₁, v₁ ⟫
 #eval ‖ v₁ ‖
 #eval ‖ v₁ ‖²
+#eval (5 * v₁ + v₁)
 
 def v₂ : Vec2 := ![2.0, 6.0]
 #eval ⟪ v₁ , v₂ ⟫

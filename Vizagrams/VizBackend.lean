@@ -9,6 +9,7 @@ open GeometricPrimitive
 open GraphicalPrimitive
 open Sty
 open FreeMonad
+open LinearAlgebra
 namespace VizBackend
 
 private def frame : Frame where
@@ -30,6 +31,9 @@ def mod2π (θ : Float) : Float :=
   let r := θ - twoPi * Float.floor (θ / twoPi)
   if r < 0 then r + twoPi else r
 
+def getCoordinates (v : Vec2) : String :=
+  s!"{v 0} {v 1}"
+
 def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
   match g with
   | .line src trg =>
@@ -49,8 +53,8 @@ def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
   | .text pos content size =>
       Shape.text (vecToPoint pos fr) content (Size.abs size)
   | .arc rx ry c rot init final =>
-    let p0 := rotateVec (pointOnEllipse init rx ry) rot + c
-    let p1 := rotateVec (pointOnEllipse final rx ry) rot + c
+    let p0 := rotateVec2 (pointOnEllipse init rx ry) rot + c
+    let p1 := rotateVec2 (pointOnEllipse final rx ry) rot + c
     let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y
     let x0 := toString (p0 0)
     let y0 := toString (flipY (p0 1))
@@ -71,33 +75,25 @@ def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
     let d := s!"M {getCoordinates m } Q {getCoordinates q.fst} {getCoordinates q.snd}"
     Shape.path d
 
-  | .cbezier bpts cpts =>
-      if h : bpts.size ≥ 2 ∧ cpts.size == 2 * (bpts.size - 1) then
+  | .cbezier m (c1, c2, p1) =>
         let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y
-        let start := vecToPoint bpts[0]! fr
+        let start := vecToPoint m fr
+        let endPt := vecToPoint p1 fr
+        let ctrl1 := vecToPoint c1 fr
+        let ctrl2 := vecToPoint c2 fr
         let (x0, y0) := start.toAbsolute
-        let y0 := flipY y0
-        let d :=
-          List.range (bpts.size - 1) |>.map (fun i =>
-            let p1 := vecToPoint (bpts[i+1]!) fr
-            let c1 := vecToPoint (cpts[2 * i]!) fr
-            let c2 := vecToPoint (cpts[2 * i + 1]!) fr
-            let (x1, y1) := p1.toAbsolute
-            let (x1, y1) := (x1, flipY y1)
-            let (cx1, cy1) := c1.toAbsolute
-            let (cx2, cy2) := c2.toAbsolute
-            s!"C {cx1} {flipY cy1}, {cx2} {flipY cy2}, {x1} {y1}"
-          ) |>.foldl (· ++ " " ++ ·) ("M " ++ toString x0 ++ " " ++ toString y0)
+        let (x1, y1) := endPt.toAbsolute
+        let (cx1, cy1) := ctrl1.toAbsolute
+        let (cx2, cy2) := ctrl2.toAbsolute
+        let d := s!"M {x0} {flipY y0} C {cx1} {flipY cy1}, {cx2} {flipY cy2}, {x1} {flipY y1}"
         Shape.path d
-      else
-        Shape.path ""
 
 
 def primToElem (p : Prim) (fr : Frame) : Element fr :=
   { shape := geomToShape p.geom fr
   , fillColor := p.style.fillColor
   , strokeColor := p.style.strokeColor
-  , strokeWidth := styleToSize p.style.strokeWidth fr
+  , strokeWidth := styleToSvgSize p.style.strokeWidth fr
   }
 
 def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
