@@ -3,7 +3,7 @@ import Vizagrams.Mark
 open GraphicalPrimitive
 open GraphicalMark
 open Sty
-
+open LinearAlgebra
 namespace FreeMonad
 
 -- Transformar em Tupla
@@ -18,7 +18,7 @@ instance : Coe Mat2Vec2 ℍ where
   coe Ab := ℍ.mk {} Ab
 
 instance : Mul ℍ where
-  mul x y := ℍ.mk (Style.comp x.s y.s) ( x.g )
+  mul x y := ℍ.mk ( x.s ++ y.s) ( x.g )
 
 inductive F (α : Type) where
   | comp : α → α → F α
@@ -48,7 +48,7 @@ def 𝕋.ulift {α β} (ulift : α → β) (a : 𝕋.{u+1} α) : 𝕋.{(max u v)
 def Tree.ulift (a : Tree.{u+1} Node ) : Tree.{(max u v) + 1} (Node) :=
   match a with
   | .pure x => .pure x.ulift
-  | .comp s t => .comp s.ulift t.ulift 
+  | .comp s t => .comp s.ulift t.ulift
 -/
 
 def 𝕋.map (f : α → β) (a : 𝕋 α) : 𝕋 β :=
@@ -149,7 +149,7 @@ def 𝕋.ulift (a : 𝕋.{u+1} Mark ) : 𝕋.{(max u v) + 1} (Mark) :=
 
 instance : HAdd (𝕋 Mark.{u}) (𝕋 Mark.{v}) (𝕋 Mark.{max u v}) where
   hAdd m n := 𝕋.comp m.ulift n.ulift
-  
+
 instance : HAdd Mark.{u} (𝕋 Mark.{v}) (𝕋 Mark.{max u v}) where
   hAdd m n := 𝕋.comp (𝕋.pure m.ulift) n.ulift
 
