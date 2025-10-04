@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2025 Henrique Borges. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Davi Barreira, Henrique Borges
+-/
 import ProofWidgets.Data.Svg
 import ProofWidgets.Component.HtmlDisplay
 /-!

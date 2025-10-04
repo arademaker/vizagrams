@@ -6,7 +6,7 @@ open GraphicalPrimitive
 open ProofWidgets Svg
 open GraphicalMark
 open FreeMonad
-
+open LinearAlgebra
 -- Example: Drawing a "BarChart"
 def data₁ : List Float :=  [1.0, 2.3, 0.7, 3.1, 0.3]
 
