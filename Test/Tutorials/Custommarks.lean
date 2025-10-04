@@ -7,6 +7,7 @@ open GraphicalPrimitive
 open ProofWidgets Svg
 open GraphicalMark
 open FreeMonad
+open LinearAlgebra
 open Envelope
 open Sty
 
@@ -65,8 +66,8 @@ instance : Coe RegularPolygon Mark where
   coe m := Mark.mk m
 
 -- Desenhando uma Arrow com um Triangulo como HeadMark
-def triangle : RegularPolygon := {sides := 3 , size := 1, style := {fillColor := Color.mk 0 0 1 }}
-#html draw triangle
+def triangle : RegularPolygon := {center := ![0, 0], sides := 3 , size := 1, style := {fillColor := Color.mk 0 0 1 }}
+#html draw₁ triangle
 
 def arrow₁ : 𝕋 Mark :=
   {
@@ -82,12 +83,13 @@ def arrow₁ : 𝕋 Mark :=
   : Arrow }
 
 
-#html draw arrow₁
+#html draw₁ arrow₁
 
-def 𝕋rotate (y : Float) : FreeMonad.ℍ := { s := {} , g := rotate y}
-#html draw ( 𝕋rotate (π/3) * arrow₁)
-def 𝕋scale (y : Float) : ℍ := { s := {}, g := scale y }
-#html draw (𝕋scale 0.5 * arrow₁)
+def 𝕋rotate (y : Float) : FreeMonad.ℍ := ℍ.mk {} (rotate y)
+#html draw₁ ( 𝕋rotate (π/3) * arrow₁)
+def 𝕋scale (y : Float) : ℍ := ℍ.mk {} (scale y)
+#html draw₁ (𝕋scale 0.5 * arrow₁)
+def 𝕋translate (v : Vec2) : ℍ := ℍ.mk {} (translate v)
 
 -- Criando Estrutura d eFace
 structure Face where
@@ -101,11 +103,11 @@ structure Face where
 instance : MarkInterface Face where
   θ f :=
     -- estilos --------------------------------------------
-    let eyeStyle  := Style.comp { fillColor := some (Color.mk 0 0 1) } f.eyestyle
-    let headStyle := Style.comp
+    let eyeStyle  := { fillColor := some (Color.mk 0 0 1) } ++ f.eyestyle
+    let headStyle :=
       { fillColor := some (Color.mk 1 1 1),
-        strokeColor := some (Color.mk 0 0 0) } f.headstyle
-    let smileStyle := Style.comp { fillColor := none } f.smilestyle
+        strokeColor := some (Color.mk 0 0 0) } ++ f.headstyle
+    let smileStyle := { fillColor := none } ++ f.smilestyle
 
     -- cabeça ---------------------------------------------
     let head : 𝕋 Mark := NewCircle 5 f.center headStyle
@@ -151,7 +153,6 @@ d = Face(smile=0.5) + mapreduce(a->R(a)Arrow(pts=[[1,0],[2,0]],headsize=a/10),+,
 draw(d,height=200)
 -/
 
-def 𝕋translate (v : Vec2): ℍ := {s := {}, g := translate v }
 def rectEstilo : Style := { fillColor := some (Color.mk 0.5 0.5 0.5) }
 def rect₁ : 𝕋 Mark := NewPolygon #[![0,0],![2,0],![2,1],![0,1]] rectEstilo
 def rectTransladada : 𝕋 Mark := 𝕋translate (![0, -1.5]) * rect₁
