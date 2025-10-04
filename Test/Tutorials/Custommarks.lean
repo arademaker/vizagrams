@@ -146,12 +146,6 @@ def face₁ : 𝕋 Mark :=
 
 #html draw ( (𝕋scale 1) * face₁) --(BoundingBox.toFrame (boundingBox𝕋 ( face₁)) )
 
-/-
-angles = 0:π/10:π
-d = Face(smile=0.5) + mapreduce(a->R(a)Arrow(pts=[[1,0],[2,0]],headsize=a/10),+, angles) + S(:fill=>:grey)T(0,-1.5)*Rectangle(h=1,w=2)
-
-draw(d,height=200)
--/
 
 def rectEstilo : Style := { fillColor := some (Color.mk 0.5 0.5 0.5) }
 def rect₁ : 𝕋 Mark := NewPolygon #[![0,0],![2,0],![2,1],![0,1]] rectEstilo
@@ -194,13 +188,12 @@ def finalDrawing : 𝕋 Mark :=
   (centerCircle + greyRectangle)
 
 #html draw₁ ((𝕋scale 0.5 * allArrows) + finalDrawing)
--- #html draw (finalDrawing + allArrows)
 
-structure Tree where
+structure Tree_ where
   h : Float
 deriving Inhabited
 
-instance : MarkInterface Tree where
+instance : MarkInterface Tree_ where
   θ t :=
     let height := t.h
 
@@ -220,7 +213,7 @@ instance : MarkInterface Tree where
       (Array.range 10).map (fun i => i.toFloat * 0.7)
     let smallLeaves : Array (𝕋 Mark) :=
       angles.map fun θ =>
-        𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5]) 
+        𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5])
         * (NewCircle 0.3 ![0,0] leafStyle : 𝕋 Mark)
 
     let leavesTotal : 𝕋 Mark :=
@@ -229,10 +222,10 @@ instance : MarkInterface Tree where
     let leafOff : Float := height/2 + 0.5
     flat (𝕋scale 0.75 * (trunk + ((𝕋translate (![0, leafOff])) * leavesTotal)))
 
-instance : Coe Tree Mark where
+instance : Coe Tree_ Mark where
   coe t := Mark.mk t
 
-def diagram : 𝕋 Mark :=  (Tree.mk 3) → Tree.mk 6
+def diagram : 𝕋 Mark :=  (Tree_.mk 3) → Tree_.mk 6
 
 #html draw₁ diagram
 
@@ -259,7 +252,7 @@ instance : MarkInterface Forest where
 
     let treePrimsArr : Array (Array Prim) :=
       posArr.map fun p =>
-        flat (𝕋translate p * (𝕋scale 0.001) * (Tree.mk 2 : 𝕋 Mark))
+        flat (𝕋translate p * (𝕋scale 0.001) * (Tree_.mk 2 : 𝕋 Mark))
 
     let allTreePrims : Array Prim :=
       treePrimsArr.foldl (· ++ ·) #[]
@@ -276,4 +269,4 @@ instance : MarkInterface Forest where
 instance : Coe Forest Mark where
   coe f := Mark.mk f
 
-#html draw (Forest.mk 50) (BoundingBox.toFrame (boundingBox𝕋 (Forest.mk 50)))
+#html draw (Forest.mk 20) (BoundingBox.toFrame (boundingBox𝕋 (Forest.mk 20)))

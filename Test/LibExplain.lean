@@ -1,3 +1,21 @@
+/-
+# Vizagrams Library Explained
+
+This file provides a comprehensive walkthrough of the Vizagrams library,
+demonstrating the core concepts, types, and operations available for creating
+data visualizations in Lean 4.
+
+## Overview
+
+Vizagrams is built on category-theoretic foundations, providing a compositional
+approach to data visualization. This tutorial covers:
+1. The hierarchy of drawable objects
+2. Geometric transformations
+3. Styling and composition
+4. Envelopes and bounding boxes
+5. Creating custom marks
+-/
+
 import Vizagrams.FreeMonad
 import Vizagrams.VizBackend
 
@@ -6,438 +24,554 @@ open VizBackend
 open GraphicalPrimitive
 open ProofWidgets Svg
 open GraphicalMark
+open FreeMonad
+open LinearAlgebra
 
-/- 1. Entendendo os objetos gráficos -/
+/-!
+## 1. Understanding Graphical Objects
 
-/-
-Temos 4 tipos diferentes de objetos desenhaveis
+Vizagrams provides a hierarchy of four drawable object types:
 
-· Prim ( Representa Primitivas)
-· Array Prim ( Representa uma "lista ordenada" de primitivas)
-· Mark ( Type que possui uma instancia de MarkInteface θ : Type → Array Prim)
-· 𝕋 Mark ( Free Monad em Endofuctors Mark )
+1. **Prim** (Primitive): The basic geometric shapes with styling
+2. **Array Prim**: Ordered collections of primitives
+3. **Mark**: Types implementing `MarkInterface` with a function `θ : Type → Array Prim`
+4. **𝕋 Mark**: Free monad over marks, enabling compositional diagram construction
 
-Vamos observar como esses objetos se relacionam
+### The Type Hierarchy
+
+```
+Prim  →  Array Prim  →  Mark  →  𝕋 Mark
+  ↓         ↓            ↓         ↓
+(base)  (collection)  (semantic) (compositional)
+```
+
+Let's explore how these types relate and convert between each other.
 -/
 
--- Vamos desenhar um Círculo como uma primitiva
-def circleₚ : Prim := NewCircle 1 ![0,0] -- Utilizamos NewCircle de VizBackend
+-- Drawing a circle as a primitive
+def circleₚ : Prim := NewCircle 1 ![0,0]  -- Using NewCircle from VizBackend
 #eval circleₚ
 /-
+Output:
 { geom := Geom.circle 1.000000 ![0.000000, 0.000000],
-  s := Style.mk { strokeColor := none, strokeWidth := none, fillColor := (0.000000, 0.000000, 0.000000) } }
+  style := { strokeColor := none, strokeWidth := none, fillColor := some (0.000000, 0.000000, 0.000000) } }
 -/
--- Vamos verificar que circleₚ pode ser considerado um Array Prim
-#check (circleₚ : Array Prim) -- #[circleₚ] : Array Prim
+
+-- Verify that circleₚ can be coerced to Array Prim
+#check (circleₚ : Array Prim)  -- #[circleₚ] : Array Prim
 
 def circleₐ : Array Prim := circleₚ
 #eval circleₐ
 /-
+Output:
 #[{ geom := Geom.circle 1.000000 ![0.000000, 0.000000],
-    s := Style.mk { strokeColor := none,
-                    strokeWidth := none,
-                    fillColor := (0.000000, 0.000000, 0.000000) } }]
+    style := { strokeColor := none,
+               strokeWidth := none,
+               fillColor := some (0.000000, 0.000000, 0.000000) } }]
 -/
 
--- E como uma Mark ?
-#check ( circleₚ : Mark ) -- Mark.mk circleₚ : Mark
+-- Coercing Prim to Mark
+#check (circleₚ : Mark)  -- Mark.mk circleₚ : Mark
 def circleₘ : Mark := circleₚ
--- #eval circleₘ -- Alterar toString de Prim
-/- Podemos fazer uma coerção Prim → Mark, mas ainda não podemos fazer Array Prim → Mark
-Verificar se faz sentido pensar em uma coe Array Prim → Mark pois o usuário trabalhará
-apenas com objetos do tipo Mark ou 𝕋 Mark
+
+/-
+**Coercion Chain: Prim → Mark**
+
+We have a coercion `Prim → Mark`, but not yet `Array Prim → Mark`.
+This design choice reflects that users typically work with `Mark` or `𝕋 Mark`,
+not directly with `Array Prim`.
 -/
 
--- E de circle para 𝕋 Mark ?
-#check (circleₚ : FreeMonad.𝕋 Mark) --FreeMonad.𝕋.pure (Mark.mk circleₚ) : FreeMonad.𝕋 Mark
-/- Aqui podemos ver incusive como é essa transformação de Prim → 𝕋 Mark
-Primeiro o objeto Prim é transformado em uma Mark e depois é utilizado o pure
-| pure : α → 𝕋 α
+-- Coercing Prim to 𝕋 Mark
+#check (circleₚ : FreeMonad.𝕋 Mark)  -- FreeMonad.𝕋.pure (Mark.mk circleₚ) : FreeMonad.𝕋 Mark
 
-De forma simples uma Monad é uma solução para conseguir compor funções que retornam
-valores com efeitos
+/-
+**Understanding the Prim → 𝕋 Mark Transformation**
 
+The transformation happens in two steps:
+1. `Prim` → `Mark` (via Mark.mk)
+2. `Mark` → `𝕋 Mark` (via pure)
+
+### What is a Monad?
+
+A monad is a structure for composing functions that return values with effects:
+
+```lean
 class Monad (m : Type → Type) where
-  pure : α → m α -- aplica o efeito a um valor puro
-  bind : m α → (α → m β) → m β -- ajuda a compor funções que retornam valores com efeito
+  pure : α → m α            -- Inject pure value into monadic context
+  bind : m α → (α → m β) → m β  -- Compose monadic functions
+```
 
-Podemos interpretar nossa 𝕋 Mark como uma árvore, e a operação pure é a que pega
-um Mark e adiciona a uma folha
+In Vizagrams, `𝕋 Mark` represents a tree of graphical operations.
+The `pure` operation creates a leaf node containing a single mark.
 -/
 
-#check (circleₘ : FreeMonad.𝕋 Mark) -- FreeMonad.𝕋.pure circleₘ : FreeMonad.𝕋 Mark
--- Aqui ocorre o mesmo, só que não precisamos transformar circleₘ em Mark
+#check (circleₘ : FreeMonad.𝕋 Mark)  -- FreeMonad.𝕋.pure circleₘ : FreeMonad.𝕋 Mark
 
 def 𝕋circle : FreeMonad.𝕋 Mark := circleₘ
 
-/- Vamos agora buscar desenhar nossos circles
-Utilizamos para isso a ProofWidgets, em VizBackend temos duas funções de desenho
-· drawsvg (Array Prim) (frame)
-· draw (𝕋 Mark) (frame)
-(obs): Aqui seria interesante discutir sobre a necessidade de drawsvg
+/-!
+## 2. Rendering Functions
+
+VizBackend provides two main rendering functions:
+- `drawsvg (Array Prim) (Frame)`: Render primitives directly
+- `draw (𝕋 Mark) (Frame)`: Render a diagram tree
+- `draw₁ (𝕋 Mark)`: Automatically compute optimal frame from bounding box
+
+**Note**: Due to coercions, `draw` works with `Prim`, `Mark`, and `𝕋 Mark`.
+However, it doesn't work directly with `Array Prim` since there's no
+coercion `Array Prim → 𝕋 Mark`.
 -/
 
 #html drawsvg circleₚ
 #html draw circleₚ
 
-/- Como temos coerções de Prim → Mark e de Mark → 𝕋 Mark, tanto drawsvg
-quanto draw funcionam em prim, entretanto draw não funcionaria em um ArrayPrim
+/-
+The following would fail:
+```lean
 #html draw circleₐ
-application type mismatch
-  @draw circleₐ
-argument
-  circleₐ
-has type
-  Array Prim : Type
-but is expected to have type
-  FreeMonad.𝕋 Mark : Type 1
+-- Error: application type mismatch
+--   circleₐ has type Array Prim : Type
+--   but is expected to have type FreeMonad.𝕋 Mark : Type 1
+```
 -/
+
 #html draw circleₘ
 #html draw 𝕋circle
-/- Agora que temos como visualizar nossos "desenhos", vamos observar algumas
-operações que temos disponíveis
-· Translação
-· Rotação
-· Transformações de estilo
-· Envelope e BoundBox
+
+/-!
+## 3. Geometric Transformations
+
+Available transformations:
+- **Translation**: Move objects in space
+- **Rotation**: Rotate objects around the origin
+- **Scaling**: Resize objects
+- **Style transformations**: Modify visual appearance
 -/
 
--- Translação em Prim
-def t_r₁ : Mat2Vec2 := translate ![3,0] -- três unidade para a direita
+-- ### Translation on Prim
+def t_r₁ : Mat2Vec2 := translate ![3,0]  -- Translate 3 units to the right
 
--- Aplicamos transformações a esquerda do objeto Prim
+-- Transformations are applied to the left of the object
 #eval t_r₁ * circleₚ
 def circleₚtoright := t_r₁ * circleₚ
-#check circleₚtoright -- circleₚtoright : Prim
--- podemos ver as diferenças
+#check circleₚtoright  -- circleₚtoright : Prim
+
+-- Visualize the difference
 #html drawsvg circleₚ
 #html drawsvg circleₚtoright
--- Vamos tentar verificar os objetos no mesmo frame
-#check circleₚ ⊕ circleₚtoright -- circleₚ ⊕ circleₚtoright : Array Prim
+
+-- Combine primitives using ⊕ (array concatenation)
+#check circleₚ ⊕ circleₚtoright  -- circleₚ ⊕ circleₚtoright : Array Prim
 def two_circles := circleₚ ⊕ circleₚtoright
 #html drawsvg two_circles
--- Entretanto não é possível  observá-los com draw, pois não temos coe Array Prim → 𝕋 Mark
 
--- Translação em Array Prim
+-- Note: Cannot use `draw` with Array Prim (no coercion Array Prim → 𝕋 Mark)
+
+-- ### Translation on Array Prim
 #eval t_r₁ * two_circles
-#html drawsvg ( t_r₁ * two_circles )
-/- Aplicar uma translação em um Array Prim significa aplicá-la a cada uma das componentes
-  t * #[p₁ , p₂] = #[t * p₁ , t * p₂]
+#html drawsvg (t_r₁ * two_circles)
+
+/-
+**Transformation on Arrays**
+
+Applying a transformation to `Array Prim` applies it element-wise:
+```
+t * #[p₁, p₂] = #[t * p₁, t * p₂]
+```
 -/
 
--- Translação em Mark
-#check ( t_r₁ * circleₘ ) -- t_r₁ * circleₘ : Array Prim
-/- Quando aplicamos uma translação em um Mark, ele é convertido para Array Prim
-instance : HMul G Mark (Array Prim) where
-  hMul g M  := g * M.θ
+-- ### Translation on Mark
+#check (t_r₁ * circleₘ)  -- t_r₁ * circleₘ : Array Prim
+
+/-
+**Mark Transformation Behavior**
+
+When applying a transformation to a `Mark`, it's converted to `Array Prim`:
+```lean
+instance : HMul Mat2Vec2 Mark (Array Prim) where
+  hMul g M := g * M.θ
+```
+
+This shows that `Mark` alone is "unstable" — most operations on `Mark`
+return `Array Prim`. The proper compositional interface uses `𝕋 Mark`.
 -/
-#html drawsvg ( t_r₁ * circleₘ )
+
+#html drawsvg (t_r₁ * circleₘ)
 def circleₘtoright := t_r₁ * circleₘ
-def twoMarkCircles := circleₘtoright ⊕ circleₘ
-#check twoMarkCircles -- twoMarkCircles : Array Prim
+-- Since circleₘtoright is Array Prim, we need to convert circleₘ to Array Prim too
+def twoMarkCircles := circleₘtoright ⊕ (circleₘ : Array Prim)
+#check twoMarkCircles  -- twoMarkCircles : Array Prim
 #html drawsvg twoMarkCircles
-/-Isso nos mostra que o tipo Mark sozinho é "instável" pois quase todas as aplicações
-em Mark retornam um Array Prim
-No final veremos como funcionam as transformações em 𝕋 Mark
--/
 
+-- ### Rotation
 def g_45 : Mat2Vec2 := rotate (π/4)
 
--- Vamos precisar definir um novo objeto onde possamos ver os efeitos de rotação
-def square₀ : Prim := NewPolygon #[![0.7,0.7],![-0.7,0.7],![-0.7,-0.7],![0.7,-0.7]]
+-- Create a square to see rotation effects clearly
+def square₀ : Prim := NewPolygon #[![0.7,0.7], ![-0.7,0.7], ![-0.7,-0.7], ![0.7,-0.7]]
 #html drawsvg square₀
-#check g_45 * square₀ -- g_45 * square₀ : Prim
+#check g_45 * square₀  -- g_45 * square₀ : Prim
 
 def squareᵣ := g_45 * square₀
 #html drawsvg squareᵣ
 
--- Da mesma forma que em translate, a operação quando aplicada em um Array Prim, é aplicada elemento a elemento
+-- Rotation on Array Prim (element-wise application)
 def square₁ : Prim := t_r₁ * square₀
 def twoSquares := square₀ ⊕ square₁
 #html drawsvg (g_45 * twoSquares)
 
-/- Observe que na rotação vemos um efeito de translação no objeto,
-isso ocorre pois o objeto é rotacionado ao redor da origem
-`importante: Verificar operação de rotação`.
+/-
+**Important: Rotation around origin**
+
+Notice the apparent translation effect when rotating. This occurs because
+rotation is performed around the origin (0,0), not the object's center.
+To rotate around an object's center, combine translation operations.
 -/
 
--- Transformação de escala
+-- ### Scaling
 def scale2 : Mat2Vec2 := scale 2
 def bigSquare := scale2 * square₀
 #html drawsvg bigSquare
 #html drawsvg (scale2 * twoSquares)
 
--- Também podemos compor transformações
-#html drawsvg ( (scale2 ∘ g_45 ∘ t_r₁) * square₀ )
+-- Composing transformations using function composition
+#html drawsvg ((scale2 ∘ₜ g_45 ∘ₜ t_r₁) * square₀)
 
--- Trasformações de estilo
-/- Em `Style.lean` temos
+/-!
+## 4. Style Transformations
+
+Styles are defined in `Style.lean`:
+```lean
 structure Style where
   strokeColor := (none : Option Color)
   strokeWidth := (none : Option StyleSize)
   fillColor   := (none : Option Color)
+```
+
+Styles compose using the `++` operator (right-biased merge).
 -/
 
-def borderToblue : Sty.Style := {strokeColor := Color.mk 0 0 1 }
-#html drawsvg (borderToblue * bigSquare)
+def borderToBlue : Sty.Style := {strokeColor := Color.mk 0 0 1}
+#html drawsvg (borderToBlue * bigSquare)
 
 def size : Sty.StyleSize := .px 10
-def bigborder : Sty.Style := {strokeWidth := size}
-#html drawsvg ( bigborder * (borderToblue * bigSquare))
+def bigBorder : Sty.Style := {strokeWidth := size}
+#html drawsvg (bigBorder * (borderToBlue * bigSquare))
 
-def Toblue : Sty.Style := {fillColor := Color.mk 0 0 1 }
-#html drawsvg (Toblue * bigSquare)
-/- As operações de estilo são definidas utilizando rightOption
+def toBlue : Sty.Style := {fillColor := Color.mk 0 0 1}
+#html drawsvg (toBlue * bigSquare)
 
-def rightOption {α : Type} (o1 : Option α) (o2 : Option α) : Option α :=
-  match o2 with
-  | none => o1
-  | some a => some a
+/-
+**Style Composition with `++`**
 
-Portanto quando tentamos Toblue * bigSquare, nada acontece pois o criamos
-utilizando NewPolygon que pre_seleciona fillColor
+After refactoring, styles compose using `++`:
+```lean
+instance : Append Style where
+  append s1 s2 := {
+    strokeColor := s2.strokeColor.orElse fun () => s1.strokeColor
+    strokeWidth := s2.strokeWidth.orElse fun () => s1.strokeWidth
+    fillColor := s2.fillColor.orElse fun () => s1.fillColor
+  }
+```
+
+The right-hand style overrides the left. When applying `toBlue * bigSquare`,
+nothing changes because `NewPolygon` pre-sets `fillColor`.
 -/
-def newSquare : Prim := {geom := Geom.polygon #[![0,0], ![2,0], ![2,2], ![0,2]] , style := {}}
+
+def newSquare : Prim := {geom := Geom.polygon #[![0,0], ![2,0], ![2,2], ![0,2]], style := {}}
 #eval newSquare
-#html drawsvg newSquare -- Como NewSquare não possui fill, não é possível ver nada
-#html drawsvg ( Toblue * newSquare )
--- Também podemos compor diversos estilos
-def redborder : Sty.Style := {strokeColor := Color.mk 1 0 0}
-#eval redborder.comp Toblue
-#html drawsvg ((redborder.comp Toblue) * (bigborder * newSquare))
-#html drawsvg ( g_45 * ((redborder.comp Toblue) * (bigborder * newSquare)))
+#html drawsvg newSquare  -- Invisible (no fill or stroke)
+#html drawsvg (toBlue * newSquare)
 
-/- Envelope e BoundingBox
-O envelope é uma operação bastante interessante, ela pode ser utilizada para definirmos
-o frame de nossos diagramas
+-- Composing multiple styles
+def redBorder : Sty.Style := {strokeColor := Color.mk 1 0 0}
+#eval redBorder ++ toBlue
+#html drawsvg ((redBorder ++ toBlue) * (bigBorder * newSquare))
+#html drawsvg (g_45 * ((redBorder ++ toBlue) * (bigBorder * newSquare)))
 
-O que é o envelope ?
-Dado uma direção, o envelope de um diagrama naquela direção é a menor distância entre a origem e
-a linha de separação ( Reta que divide o espaço em dois, um contendo o diagrame e o outro vazio)
+/-!
+## 5. Envelopes and Bounding Boxes
+
+**Envelope**: Given a direction vector, the envelope of a diagram in that
+direction is the minimum distance from the origin to the separating line
+(the line that divides space into a half containing the diagram and an empty half).
+
+Envelopes enable:
+1. Computing bounding boxes
+2. Positioning diagrams relative to each other
 -/
-open Envelope
-#check (square₀ : Geom) -- `instaciei Coe Prim Geom para esse exemplo `
-#eval (envelope square₀ ![1,1])
--- Para calcular o BoundingBox de um diagram, basta calcular o envelope em todas as direções
-def BoundingBox_square₀ := boundingBoxPrim square₀
-#check BoundingBox_square₀
-#html drawsvg square₀ (BoundingBox.toFrame BoundingBox_square₀ )
--- Vemos que o boundingbox de um square é ele próprio
 
+open Envelope
+#check (square₀ : Geom)  -- Coercion Prim → Geom for envelope operations
+#eval (envelope square₀ ![1,1])
+
+-- Computing bounding box by evaluating envelope in all directions
+def boundingBox_square₀ := boundingBoxPrim square₀
+#check boundingBox_square₀
+#html drawsvg square₀ (BoundingBox.toFrame boundingBox_square₀)
+
+-- The bounding box of an axis-aligned square is the square itself
 def bb_s45 := boundingBoxPrim (g_45 * square₀)
 #html drawsvg (g_45 * square₀) (BoundingBox.toFrame bb_s45)
--- Entretanto quando rotacionamos, agora ele não ocupa toda a caixa
+-- After rotation, the square doesn't fill the entire bounding box
 
--- Temos também um para Array Prim `redundante`
+-- Bounding box for Array Prim
 def bb_2s := boundingBoxPrims twoSquares
 #html drawsvg twoSquares (BoundingBox.toFrame bb_2s)
 def bb_2s45 := boundingBoxPrims (g_45 * twoSquares)
-#html drawsvg (g_45 * twoSquares) (BoundingBox.toFrame bb_2s45) -- `não resolve problema de rotação`
+#html drawsvg (g_45 * twoSquares) (BoundingBox.toFrame bb_2s45)
 
--- Outro uso para o envelope é a capacidade posicionar um diagrama ao lado de outro
+/-
+### Positioning diagrams using envelopes
+
+To position diagram D₂ adjacent to D₁ in direction v:
+1. Compute d₁ = envelope(D₁, v)
+2. Compute d₂ = envelope(D₂, -v)
+3. Offset = d₁ + d₂
+4. Translate D₂ by (offset · v)
+
+This ensures D₂'s closest face (in direction -v) touches D₁'s furthest face (in direction v).
+-/
+
 def h₁ : Vec2 := normalize ![0,10]
 
--- Embora a função envelope já normalize os vetores, a translação tem de usar o vetor normalizado
+-- Calculate how far the first diagram extends in direction h₁
 def limite_d₁ : Float := envelope (scale2 * circleₚ) h₁
--- Calculamos o quanto o primeiro diagrama ( O que está fixo ) se estende na direção h₁
-def limite_d₂ : Float := envelope (circleₚ) (-h₁)
--- Calculamos o quanto o segundo diagrama ( O que desejamos posicionar ) se estende na direção oposta a h₁
+
+-- Calculate how far the second diagram extends in the opposite direction
+def limite_d₂ : Float := envelope circleₚ (-h₁)
+
+-- Total offset needed for adjacency
 def offset_h₁ : Float := limite_d₁ + limite_d₂
-/-
-Para garantir que D₂ fique “colado” em D₁ sem sobreposição, basta deslocá-lo em v por uma distância igual a
-Editar
-offset = d1 + d2
-Assim, a face mais próxima de D₂ (na direção –v) encosta exatamente na face mais avançada de D₁ (na direção v).-/
-def position := ScalarMul offset_h₁ h₁
+
+-- Scalar multiplication: scale the unit vector by the offset distance
+def position : Vec2 := ![offset_h₁ * (h₁ 0), offset_h₁ * (h₁ 1)]
 
 #eval position
-#html drawsvg ( (scale2 * circleₚ) ⊕ ( (translate position) * circleₚ))
-def diagrama₁ := ((scale2 * circleₚ) ⊕ ( (translate position) * circleₚ))
+#html drawsvg ((scale2 * circleₚ) ⊕ ((translate position) * circleₚ))
+
+def diagrama₁ := ((scale2 * circleₚ) ⊕ ((translate position) * circleₚ))
 #check diagrama₁
 #eval diagrama₁
 def bb_d := boundingBoxPrims diagrama₁
-#html drawsvg (diagrama₁) (BoundingBox.toFrame bb_d)
+#html drawsvg diagrama₁ (BoundingBox.toFrame bb_d)
 
-/- # Desenvolvimento: Posicionamento por envelope
-↑ ← → ↓
+/-!
+## 6. Envelope-Based Positioning Operators
+
+Vizagrams provides convenient operators for positioning:
+- `→`: Position to the right
+- `←`: Position to the left
+- `↑`: Position above
+- `↓`: Position below
+
+These operators use envelopes internally to compute proper spacing.
 -/
+
 def circleₚpositioned := envelopePositionPrim circleₚ ![1,1] circleₚ
-#html drawsvg ( circleₚ ⊕ circleₚpositioned )
+#html drawsvg (circleₚ ⊕ circleₚpositioned)
 
-#html drawsvg ( circleₚ → circleₚ → circleₚ )
-#html drawsvg ( circleₚ → circleₚ ↑ square₀)
--- Também podemos posicionar objetos com as operações ↑ ↓ → ← adicionando um espaçamento
-#html drawsvg ( circleₚ →[0.5] circleₚ →[0.5] circleₚ )
+#html drawsvg (circleₚ → circleₚ → circleₚ)
+#html drawsvg (circleₚ → circleₚ ↑ square₀)
 
+-- Positioning with custom spacing using →[gap]
+#html drawsvg (circleₚ →[0.5] circleₚ →[0.5] circleₚ)
+
+-- Example: Stacking circles recursively
 def stackCircles : Nat → Float → Array Prim
-| 0,      _   => #[]                         -- zero círculos
+| 0,          _ => #[]
 | Nat.succ n, gap =>
   let prev := stackCircles n gap
   if prev.isEmpty then
-    -- primeiro círculo
     #[circleₚ]
   else
-    -- empilha mais um após o que já existe
     prev →[gap] #[circleₚ]
 
--- EXEMPLOS
-
 #html drawsvg (circleₚ →[0.5] circleₚ →[0.5] circleₚ)
--- exatamente três círculos com gap = 0.5
 
-def d := stackCircles 5 0.5   -- cinco círculos em fila, gap = 0.5
+def d := stackCircles 5 0.5
 #html drawsvg d
 
--- 1) Constantes geométricas do triângulo equilátero de lado 1
-def h : Float :=  (3 / 2 : Float).sqrt
+/-!
+## 7. Recursive Fractal Example: Sierpinski Triangle
+-/
 
--- 2) Triângulo-base como Prim
+-- Geometric constants for equilateral triangle with side 1
+def h : Float := (3 / 2 : Float).sqrt
+
+-- Base triangle primitive
 def triₚ : Prim := NewPolygon #[![0,0], ![1,0], ![0.5,h]]
 
-/--
-  Recursão que, para n = 0, retorna o triângulo único;
-  para n+1,k produz três cópias de ordem n escaladas a ½,
-  deslocadas para (0,0), (0.5,0) e (0.25,h/2).
+/-
+Recursive construction of Sierpinski triangle:
+- Base case (n=0): Single triangle
+- Recursive case (n+1): Three copies of order-n triangle, scaled to ½,
+  positioned at (0,0), (0.5,0), and (0.25,h/2)
 -/
 def sierpinskiPrims : Nat → Array Prim
 | 0   => #[triₚ]
 | n+1 =>
   let prev := sierpinskiPrims n
-  -- escala tudo em 0.5
-  let scaled := prev.map (fun p => { geom := scale 0.5 * p.geom, style := p.style })
-  -- três posições
+  -- Scale everything by 0.5
+  let scaled := prev.map (fun p => {geom := scale 0.5 * p.geom, style := p.style})
+  -- Three positions
   let t1 := scaled
-  let t2 := scaled.map (fun p => { geom := translate ![0.5,0]  * p.geom, style := p.style })
-  let t3 := scaled.map (fun p => { geom := translate ![0.25,h/2] * p.geom, style := p.style })
-  -- concatena
+  let t2 := scaled.map (fun p => {geom := translate ![0.5,0] * p.geom, style := p.style})
+  let t3 := scaled.map (fun p => {geom := translate ![0.25,h/2] * p.geom, style := p.style})
+  -- Concatenate
   t1 ++ t2 ++ t3
 
-#html drawsvg  (sierpinskiPrims 4) (BoundingBox.toFrame (boundingBoxPrims (sierpinskiPrims 4)))
+#html drawsvg (sierpinskiPrims 4) (BoundingBox.toFrame (boundingBoxPrims (sierpinskiPrims 4)))
 
-/- Translação em 𝕋 Mark
-Em FreeMonad, temos:
-structure H where -- Tranformações Gráficas
-  s : Style
-  g : G
+/-!
+## 8. Transformations on 𝕋 Mark
 
-Isso rege as transformações em objetos do tipo 𝕋 Mark
+In FreeMonad, transformations use the ℍ structure:
+```lean
+structure ℍ where
+  s : Style        -- Styling attributes
+  g : Mat2Vec2     -- Geometric transformation
+```
+
+This structure governs transformations on `𝕋 Mark` objects.
 -/
 
--- Vamos voltar a olhar para os objetos do tipo 𝕋 Mark
+-- Working with 𝕋 Mark
 #check 𝕋circle
 #html draw 𝕋circle
 
--- Como aplicar uma transformação em 𝕋circle ?
-def 𝕋translation (x : Vec2) : FreeMonad.ℍ := { s := {} , g := translate x}
-def x : Vec2:= ![2,0]
-#html draw ( 𝕋translation x * 𝕋circle )
-#check ( 𝕋translation x * 𝕋circle )
-/- # O que estamos fazendo ?
-Intuitivamente, compor marcas é como criar uma arvore
-inicialmente temos:
+-- Applying transformations to 𝕋 Mark
+def 𝕋translation (x : Vec2) : FreeMonad.ℍ := ℍ.mk {} (translate x)
+def x : Vec2 := ![2,0]
+#html draw (𝕋translation x * 𝕋circle)
+#check (𝕋translation x * 𝕋circle)
 
-        circle
+/-
+### Understanding the Tree Structure
 
-Mas após a operação 𝕋translation
+Intuitively, composing marks builds a tree:
 
-    H
+Initial state:
+```
+    circle
+```
+
+After applying 𝕋translation:
+```
+    ℍ.act
       \
-        circle
+    circle
+```
 
-
-def eval (t : FreeMonad.𝕋 Mark) : Array Prim :=
-  FreeMonad.algθ (FreeMonad.𝕋.map Mark.θ t)
-
-#eval eval ( 𝕋translation x * 𝕋circle )
+Evaluation flattens the tree:
+```lean
+def flat (t : 𝕋 Mark) : Array Prim :=
+  algθ (𝕋.map Mark.θ t)
+```
 -/
-def twoCircles : FreeMonad.𝕋 Mark := 𝕋circle + ( 𝕋translation x * 𝕋circle )
+
+def twoCircles : FreeMonad.𝕋 Mark := 𝕋circle + (𝕋translation x * 𝕋circle)
 #html draw twoCircles
-/- # Arvore de twoCircles
 
-      𝕋.comp
-    /        \
-𝕋circle     𝕋.act H
-                \
-              𝕋circle
+/-
+Tree structure of twoCircles:
+```
+       𝕋.comp
+      /      \
+ 𝕋circle    𝕋.act ℍ
+               \
+             𝕋circle
+```
 -/
--- Da mesma forma, podemos verificar as outras transformações geométricas
-def 𝕋rotate (y : Float) : FreeMonad.ℍ := { s := {} , g := rotate y}
-def 𝕋scale (z : Float) : FreeMonad.ℍ := { s := {} , g := scale z}
+
+-- Other geometric transformations
+def 𝕋rotate (y : Float) : FreeMonad.ℍ := ℍ.mk {} (rotate y)
+def 𝕋scale (z : Float) : FreeMonad.ℍ := ℍ.mk {} (scale z)
 
 def 𝕋square : FreeMonad.𝕋 Mark := square₀
 
-#html draw ( 𝕋rotate (π/4) * 𝕋square)
+#html draw (𝕋rotate (π/4) * 𝕋square)
 #html draw (𝕋scale 0.3 * 𝕋circle)
 
--- Vemos também transformações de estilo
-/- # Transformações de estilo em Marks
-Aqui ainda utilizamos
-instance : Mul H where
-  mul x y := H.mk (Style.comp x.s y.s) ( x.g )
-`Style.comp` para combinar os estilos, portanto permanece o rightOption
+/-
+### Style Transformations on 𝕋 Mark
+
+Style composition now uses `++` (after refactoring):
+```lean
+instance : Mul ℍ where
+  mul x y := ℍ.mk (x.s ++ y.s) x.g
+```
 -/
-def 𝕋style (w : Sty.Style) : FreeMonad.ℍ := { s := w , g := scale 1}
-def myStyle : Sty.Style := {strokeColor := Color.mk 0 0 1 , fillColor := Color.mk 1 1 0}
 
-#html draw (𝕋style borderToblue * 𝕋square)
-#html draw (𝕋style borderToblue * 𝕋style bigborder * 𝕋square)
+def 𝕋style (w : Sty.Style) : FreeMonad.ℍ := ℍ.mk w (scale 1)
+def myStyle : Sty.Style := {strokeColor := Color.mk 0 0 1, fillColor := Color.mk 1 1 0}
 
-/- # Envelopes e BoundingBox -/
-def blueBorderSquare : FreeMonad.𝕋 Mark := (𝕋style borderToblue * 𝕋style bigborder * 𝕋square)
+#html draw (𝕋style borderToBlue * 𝕋square)
+#html draw (𝕋style borderToBlue * 𝕋style bigBorder * 𝕋square)
 
-/- Da mesma forma que em Prim e Array Prim, podemos utilizar uma função para calcular o
-boundingbox e então converter para frame -/
+-- ### Envelopes and BoundingBox for 𝕋 Mark
+def blueBorderSquare : FreeMonad.𝕋 Mark := (𝕋style borderToBlue * 𝕋style bigBorder * 𝕋square)
+
 def bb_m₁ := boundingBox𝕋 blueBorderSquare
 def bb_m₂ := boundingBox𝕋 twoCircles
 #html draw blueBorderSquare (BoundingBox.toFrame bb_m₁)
 #html draw twoCircles (BoundingBox.toFrame bb_m₂)
 
-/- Também temos os posicionamentos por envelope -/
-#html draw ( twoCircles + envelopePositionMarks twoCircles ![0,1] twoCircles)
-#html draw (twoCircles → twoCircles ↑ twoCircles )
+-- Envelope positioning for 𝕋 Mark
+#html draw (twoCircles + envelopePositionMarks twoCircles ![0,1] twoCircles)
+#html draw (twoCircles → twoCircles ↑ twoCircles)
 #html draw (twoCircles ↑ 𝕋square)
 
--- Posicionando com espaçamento
-def bb_m₃ := boundingBox𝕋 ( twoCircles ↑[0.5] twoCircles)
-#html draw ( twoCircles ↑[0.5] twoCircles) (BoundingBox.toFrame bb_m₃)
+-- Positioning with spacing
+def bb_m₃ := boundingBox𝕋 (twoCircles ↑[0.5] twoCircles)
+#html draw (twoCircles ↑[0.5] twoCircles) (BoundingBox.toFrame bb_m₃)
 
-/- # Criando Marks
-Uma funcionalidade bastante útil e agradável é a capacidade de criar novos objetos gráficos.
-Para isso podemos observar o próprio código de Mark
+/-!
+## 9. Creating Custom Marks
 
+One of the most powerful features is creating new graphical objects.
+The Mark system is defined as:
+
+```lean
 class MarkInterface (a : Type) where
-  θ : a -> Array Prim
+  θ : a → Array Prim
 
 structure Mark where
   {T : Type}
   [inst : MarkInterface T]
-  [strg : ToString T]
   val : T
+```
 
-Uma Mark é um tipo que instancia MarkInterface
+To create a custom mark:
+1. Define a structure for your mark's parameters
+2. Implement `MarkInterface` with the rendering function `θ`
+3. Optionally add `Coe` instance for automatic conversion to `Mark`
 -/
 
--- Aqui definimos um Type
-structure sierpinski where
+-- Define the type
+structure Sierpinski where
   n : Nat
 
-instance : ToString sierpinski where
-  toString s := s!" ssierpinski {s.n}"
--- Agora criamos uma instancia de MarkInterface
-instance : MarkInterface sierpinski where
+instance : ToString Sierpinski where
+  toString s := s!"Sierpinski {s.n}"
+
+-- Implement MarkInterface
+instance : MarkInterface Sierpinski where
   θ s := sierpinskiPrims s.n
 
-def Sierpinski₃ : sierpinski := {n := 3}
+def Sierpinski₃ : Sierpinski := {n := 3}
 
-instance : Coe sierpinski Mark where
+instance : Coe Sierpinski Mark where
   coe m := Mark.mk m
 
 #html draw₁ Sierpinski₃
 
-def TT : FreeMonad.ℍ := {s := {}, g := translate ![3,0]}
-#html draw (TT * (Sierpinski₃: FreeMonad.𝕋 Mark))
+def TT : FreeMonad.ℍ := ℍ.mk {} (translate ![3,0])
+#html draw (TT * (Sierpinski₃ : FreeMonad.𝕋 Mark))
 
--- # Poligonos Regulares
+/-!
+## 10. Example: Regular Polygons
+-/
 
 structure RegularPolygon where
   center : Vec2 := ![0,0]
@@ -449,21 +583,21 @@ structure RegularPolygon where
 instance : ToString RegularPolygon where
   toString p := s!"Regular Polygon with {p.sides} sides of size {p.size}"
 
--- Agora precisamos implementar MarkInterface
+-- Helper functions for generating polygon vertices
 def findPointbyAngle (x : Float) : Vec2 :=
-  ![Float.cos x , Float.sin x]
+  ![Float.cos x, Float.sin x]
 
 def create_list (n : ℕ) : Array ℕ :=
   Array.range n |>.map (λ x => x + 1)
 
 def multiply_by_scalar (lst : Array ℕ) (scalar : Float) : Array Float :=
-  lst.map (λ x => ↑x.toFloat * scalar)
+  lst.map (λ x => x.toFloat * scalar)
 
-def regToPoly (p : RegularPolygon) : Array (Vec2) :=
-  let passo : Float := ( 2 * π  ) / (p.sides.toFloat)
-  let listn : Array ℕ := create_list (p.sides)
-  let Arr := multiply_by_scalar listn passo
-  Array.map findPointbyAngle Arr
+def regToPoly (p : RegularPolygon) : Array Vec2 :=
+  let step : Float := (2 * π) / p.sides.toFloat
+  let listn : Array ℕ := create_list p.sides
+  let arr := multiply_by_scalar listn step
+  Array.map findPointbyAngle arr
 
 instance : MarkInterface RegularPolygon where
   θ h := NewPolygon (regToPoly h) h.style
@@ -471,13 +605,17 @@ instance : MarkInterface RegularPolygon where
 instance : Coe RegularPolygon Mark where
   coe m := Mark.mk m
 
-def triangle : RegularPolygon := {sides := 3 , size := 1, style := Toblue }
+def triangle : RegularPolygon := {center := ![0,0], sides := 3, size := 1, style := toBlue}
 def triangleₘ : FreeMonad.𝕋 Mark := triangle
 #check (triangle : FreeMonad.𝕋 Mark)
 #html draw (𝕋rotate (π/4) * triangleₘ)
-#html draw (𝕋style redborder * (𝕋style bigborder * triangleₘ))
+#html draw (𝕋style redBorder * (𝕋style bigBorder * triangleₘ))
 
--- Podemos criar Marks usando Marks
+/-!
+## 11. Composing Custom Marks
+
+We can create marks that use other marks as components.
+-/
 
 structure Arrow where
   p₁ : Vec2
@@ -486,21 +624,20 @@ structure Arrow where
   style : Sty.Style
 
 instance : ToString Arrow where
-  toString a := s!"Arrow"
+  toString _ := s!"Arrow"
 
 def ArrowLine (α : Arrow) : Prim := NewLine α.p₁ α.p₂ α.style
 
 instance : MarkInterface Arrow where
   θ α :=
     let c₁ : Mark := ArrowLine α
-    let c₂ :  Mark := α.tip
+    let c₂ : Mark := α.tip
     let m : FreeMonad.𝕋 Mark := envelopePositionMarks c₁ (α.p₂ - α.p₁) c₂
     FreeMonad.flat m
 
 instance : Coe Arrow Mark where
   coe m := Mark.mk m
 
-def Arrow₁ : Arrow := {p₁ := ![0,0], p₂ := ![1,0], tip := triangle, style := bigborder.comp borderToblue}
+def Arrow₁ : Arrow := {p₁ := ![0,0], p₂ := ![1,0], tip := triangle, style := bigBorder ++ borderToBlue}
 #eval Arrow₁.p₂ - Arrow₁.p₁
-#html draw Arrow₁
--- 
+#html draw₁ Arrow₁
