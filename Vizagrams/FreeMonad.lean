@@ -101,25 +101,6 @@ This allows chaining transformations like `h1 * h2`.
 instance : Mul ℍ where
   mul x y := ℍ.mk ( x.s ++ y.s) ( x.g )
 
-/--
-**F (Functor Base)**: The base functor for the free monad construction.
-
-This functor represents the basic operations:
-- `comp`: Composition of two values
-- `act`: Action of a transformation `ℍ` on a value
-
-The free monad `𝕋` is built as the free algebra over this functor.
--/
-inductive F (α : Type) where
-  | comp : α → α → F α
-  | act : ℍ → α → F α
-
-
-/-- `F` is a functor: we can map functions over its structure. -/
-instance : Functor F where
-  map f a := match a with
-    | F.comp x y => F.comp (f x) (f y)
-    | F.act h x => F.act h (f x)
 
 universe u
 
