@@ -77,6 +77,13 @@ private def frame : Frame where
   width  := 400
   height := 400
 
+def defaultFrame : Frame where
+  xmin   := -3
+  ymin   := -3
+  xSize  := 10
+  width  := 400
+  height := 400
+
 /--
 Convert a `Vec2` (abstract 2D vector) to a `Point` in the given frame's coordinate system.
 -/

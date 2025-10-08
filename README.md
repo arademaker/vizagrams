@@ -81,58 +81,111 @@ Vizagrams uses a compositional approach to building diagrams:
 
 Start by importing the necessary modules and creating simple shapes:
 
+<table>
+<tr>
+<td width="50%" style="border: none;">
+
 ```lean
 import Vizagrams
+
+open VizBackend
 open ProofWidgets Svg
 
+open Sty
 -- Simple circle
-def circle := NewCircle 1 ![0,0] {fillColor := Color.mk 1 0 0}
+def circle := NewCircle 1 ![1,1] {fillColor := Color.mk 1 0 0}
 
 #html draw circle defaultFrame
 ```
+</td>
+<td width="50%" style="border: none;">
+<img src="assets/readme/imgs/Creating Basic Shapes.png" width="400">
+</td>
+</tr>
+</table> 
 
 #### 2. Applying Transformations
 
 Use the `*` operator to apply geometric and style transformations:
 
-```lean
--- Rotation
-def square := NewPolygon #[![-1,-1], ![-1,1], ![1,1], ![1,-1]]
-def rotated := rotate (π/4) * square
+<table>
+<tr>
+<td width="50%" style="border: none;">
 
+```lean
+open LinearAlgebra
+open FreeMonad
+open GraphicalMark
+
+def square := NewPolygon #[![-1,-1], ![-1,1], ![1,1], ![1,-1]]
+#html draw square defaultFrame
+def rotated := rotate (π/4) * square
+#html draw rotated defaultFrame
 -- Scaling and styling
+
 def styled := ℍ.mk {fillColor := Color.mk 1 0 0,
                     strokeColor := Color.mk 0 0 1,
                     strokeWidth := Sty.StyleSize.px 4}
-                   (scale 2) * square
+                   (scale 2) 
 
-#html draw rotated defaultFrame
+#html draw (styled * (square: 𝕋 Mark)) defaultFrame
 ```
+</td>
+<td width="50%" style="border: none;">
+<img src="assets/readme/imgs/Applying Transformations.png" width="400">
+</td>
+</tr>
+</table> 
 
 #### 3. Composing Diagrams
 
 Combine multiple marks using the `+` operator:
 
+<table>
+<tr>
+<td width="50%" style="border: none;">
+
 ```lean
-def blueCircle := NewCircle 1 ![0,0] {fillColor := Color.mk 0 0 1}
-def redTriangle := NewPolygon #[![-0.85,-0.5],![0.85,-0.5],![0,1]]
+def blueCircle := 
+    NewCircle 1 ![0,0] {fillColor := Color.mk 0 0 1}
+
+def redTriangle := 
+    NewPolygon #[![-0.85,-0.5],![0.85,-0.5],![0,1]]
                                {fillColor := Color.mk 1 0 0}
-def greenSquare := scale 0.5 * NewPolygon #[![-1,-1], ![-1,1], ![1,1], ![1,-1]]
-                                          {fillColor := Color.mk 0 1 0}
+def greenSquare := 
+    scale 0.5 * 
+    NewPolygon #[![-1,-1], ![-1,1], ![1,1], ![1,-1]]
+                {fillColor := Color.mk 0 1 0}
 
 -- Combine all three shapes
-def composition := blueCircle + redTriangle + greenSquare
+def composition := 
+    (blueCircle: 𝕋 Mark) + 
+    (redTriangle : 𝕋 Mark) + 
+    (greenSquare : 𝕋 Mark)
 
 #html draw composition defaultFrame
 ```
+</td>
+<td width="50%" style="border: none;">
+<img src="assets/readme/imgs/Composing Diagrams.png" width="400">
+</td>
+</tr>
+</table> 
 
 #### 4. Layout with Directional Operators
 
 Use envelope-based positioning for precise layout:
 
+<table>
+<tr>
+<td width="50%" style="border: none;">
+
 ```lean
-def c₁ := NewCircle 1 ![0,0] {fillColor := Color.mk 1 0 0}
-def c₂ := NewPolygon #[![0,-0.5], ![1,-0.5], ![1,0.5], ![0,0.5]]
+def c₁ : 𝕋 Mark := 
+  NewCircle 1 ![0,0] {fillColor := Color.mk 1 0 0}
+
+def c₂ : 𝕋 Mark := 
+  NewPolygon #[![0,-0.5], ![1,-0.5], ![1,0.5], ![0,0.5]]
                      {fillColor := Color.mk 0 0 1}
 
 -- Place c₂ to the right of c₁ with gap of 1 unit
@@ -143,12 +196,22 @@ def vLayout := c₁ ↑[0.5] c₂
 
 #html draw layout defaultFrame
 ```
+</td>
+<td width="50%" style="border: none;">
+<img src="assets/readme/imgs/ayout with Directional Operators.png" width="400">
+</td>
+</tr>
+</table> 
 
-#### 5. Advanced Example: Nested Composition
+#### 5. Example: Nested Composition
+
+<table>
+<tr>
+<td width="50%" style="border: none;">
 
 ```lean
 -- Create a composed mark
-def innerDiagram := blueCircle →[1] redTriangle
+def innerDiagram : 𝕋 Mark:= blueCircle →[1] redTriangle
 
 -- Use it as part of a larger diagram
 def outerCircle := NewCircle 2.5 ![0,0]
@@ -160,6 +223,12 @@ def final := outerCircle + innerDiagram
 
 #html draw final defaultFrame
 ```
+</td>
+<td width="50%" style="border: none;">
+<img src="assets/readme/imgs/Nested Composition.png" width="400">
+</td>
+</tr>
+</table> 
 
 ### Key Operators
 
@@ -173,8 +242,12 @@ def final := outerCircle + innerDiagram
 ### Common Transformations
 
 ```lean
-rotate (π/4)           -- Rotate 45 degrees
-scale 2                -- Uniform scaling by factor 2
-translate ![x, y]      -- Translate by vector
-ℍ.mk style geom        -- Combined style and geometric transformation
+#check rotate (π/4)           -- Rotate 45 degrees
+#check scale 2                -- Uniform scaling by factor 2
+#check translate ![1, 2]      -- Translate by vector
+#check ℍ.mk {} (rotate (π/4))        -- Combined style and geometric transformation
 ```
+
+## Examples
+Examples are in develop, now we just have an example of a chess game
+<img src="assets/readme/imgs/ChessGame.png" width="700">
