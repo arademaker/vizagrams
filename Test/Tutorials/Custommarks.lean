@@ -7,6 +7,7 @@ open GraphicalPrimitive
 open ProofWidgets Svg
 open GraphicalMark
 open FreeMonad
+open LinearAlgebra
 open Envelope
 open Sty
 
@@ -65,8 +66,8 @@ instance : Coe RegularPolygon Mark where
   coe m := Mark.mk m
 
 -- Desenhando uma Arrow com um Triangulo como HeadMark
-def triangle : RegularPolygon := {sides := 3 , size := 1, style := {fillColor := Color.mk 0 0 1 }}
-#html draw triangle
+def triangle : RegularPolygon := {center := ![0, 0], sides := 3 , size := 1, style := {fillColor := Color.mk 0 0 1 }}
+#html draw₁ triangle
 
 def arrow₁ : 𝕋 Mark :=
   {
@@ -82,12 +83,13 @@ def arrow₁ : 𝕋 Mark :=
   : Arrow }
 
 
-#html draw arrow₁
+#html draw₁ arrow₁
 
-def 𝕋rotate (y : Float) : FreeMonad.ℍ := { s := {} , g := rotate y}
-#html draw ( 𝕋rotate (π/3) * arrow₁)
-def 𝕋scale (y : Float) : ℍ := { s := {}, g := scale y }
-#html draw (𝕋scale 0.5 * arrow₁)
+def 𝕋rotate (y : Float) : FreeMonad.ℍ := ℍ.mk {} (rotate y)
+#html draw₁ ( 𝕋rotate (π/3) * arrow₁)
+def 𝕋scale (y : Float) : ℍ := ℍ.mk {} (scale y)
+#html draw₁ (𝕋scale 0.5 * arrow₁)
+def 𝕋translate (v : Vec2) : ℍ := ℍ.mk {} (translate v)
 
 -- Criando Estrutura d eFace
 structure Face where
@@ -101,11 +103,11 @@ structure Face where
 instance : MarkInterface Face where
   θ f :=
     -- estilos --------------------------------------------
-    let eyeStyle  := Style.comp { fillColor := some (Color.mk 0 0 1) } f.eyestyle
-    let headStyle := Style.comp
+    let eyeStyle  := { fillColor := some (Color.mk 0 0 1) } ++ f.eyestyle
+    let headStyle :=
       { fillColor := some (Color.mk 1 1 1),
-        strokeColor := some (Color.mk 0 0 0) } f.headstyle
-    let smileStyle := Style.comp { fillColor := none } f.smilestyle
+        strokeColor := some (Color.mk 0 0 0) } ++ f.headstyle
+    let smileStyle := { fillColor := none } ++ f.smilestyle
 
     -- cabeça ---------------------------------------------
     let head : 𝕋 Mark := NewCircle 5 f.center headStyle
@@ -144,14 +146,7 @@ def face₁ : 𝕋 Mark :=
 
 #html draw ( (𝕋scale 1) * face₁) --(BoundingBox.toFrame (boundingBox𝕋 ( face₁)) )
 
-/-
-angles = 0:π/10:π
-d = Face(smile=0.5) + mapreduce(a->R(a)Arrow(pts=[[1,0],[2,0]],headsize=a/10),+, angles) + S(:fill=>:grey)T(0,-1.5)*Rectangle(h=1,w=2)
 
-draw(d,height=200)
--/
-
-def 𝕋translate (v : Vec2): ℍ := {s := {}, g := translate v }
 def rectEstilo : Style := { fillColor := some (Color.mk 0.5 0.5 0.5) }
 def rect₁ : 𝕋 Mark := NewPolygon #[![0,0],![2,0],![2,1],![0,1]] rectEstilo
 def rectTransladada : 𝕋 Mark := 𝕋translate (![0, -1.5]) * rect₁
@@ -193,13 +188,12 @@ def finalDrawing : 𝕋 Mark :=
   (centerCircle + greyRectangle)
 
 #html draw₁ ((𝕋scale 0.5 * allArrows) + finalDrawing)
--- #html draw (finalDrawing + allArrows)
 
-structure Tree where
+structure Tree_ where
   h : Float
 deriving Inhabited
 
-instance : MarkInterface Tree where
+instance : MarkInterface Tree_ where
   θ t :=
     let height := t.h
 
@@ -219,7 +213,7 @@ instance : MarkInterface Tree where
       (Array.range 10).map (fun i => i.toFloat * 0.7)
     let smallLeaves : Array (𝕋 Mark) :=
       angles.map fun θ =>
-        𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5]) 
+        𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5])
         * (NewCircle 0.3 ![0,0] leafStyle : 𝕋 Mark)
 
     let leavesTotal : 𝕋 Mark :=
@@ -228,10 +222,10 @@ instance : MarkInterface Tree where
     let leafOff : Float := height/2 + 0.5
     flat (𝕋scale 0.75 * (trunk + ((𝕋translate (![0, leafOff])) * leavesTotal)))
 
-instance : Coe Tree Mark where
+instance : Coe Tree_ Mark where
   coe t := Mark.mk t
 
-def diagram : 𝕋 Mark :=  (Tree.mk 3) → Tree.mk 6
+def diagram : 𝕋 Mark :=  (Tree_.mk 3) → Tree_.mk 6
 
 #html draw₁ diagram
 
@@ -258,7 +252,7 @@ instance : MarkInterface Forest where
 
     let treePrimsArr : Array (Array Prim) :=
       posArr.map fun p =>
-        flat (𝕋translate p * (𝕋scale 0.001) * (Tree.mk 2 : 𝕋 Mark))
+        flat (𝕋translate p * (𝕋scale 0.001) * (Tree_.mk 2 : 𝕋 Mark))
 
     let allTreePrims : Array Prim :=
       treePrimsArr.foldl (· ++ ·) #[]
@@ -275,4 +269,4 @@ instance : MarkInterface Forest where
 instance : Coe Forest Mark where
   coe f := Mark.mk f
 
-#html draw (Forest.mk 50) (BoundingBox.toFrame (boundingBox𝕋 (Forest.mk 50)))
+#html draw (Forest.mk 20) (BoundingBox.toFrame (boundingBox𝕋 (Forest.mk 20)))
