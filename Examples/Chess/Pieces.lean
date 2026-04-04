@@ -72,154 +72,154 @@ Improved designs for each piece type:
 def pawnShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
   -- Base (trapezoid)
-  let base := NewPolygon #[![-0.25, -0.4], ![0.25, -0.4], ![0.2, -0.2], ![-0.2, -0.2]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.25, -0.4], ![0.25, -0.4], ![0.2, -0.2], ![-0.2, -0.2]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Body (circle)
-  let body := (translate ![0, 0.1] : ℍ) * (NewCircle 0.22 ![0, 0]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
+  let body := (translate ![0, 0.1] : ℍ) * (new_circle 0.22 ![0, 0]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 } : 𝕋 Mark)
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + body)
 
 -- Rook: Castle tower
 def rookShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
   -- Base
-  let base := NewPolygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.28, -0.3], ![-0.28, -0.3]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.28, -0.3], ![-0.28, -0.3]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Body
-  let body := NewPolygon #[![-0.28, -0.3], ![0.28, -0.3], ![0.32, 0.3], ![-0.32, 0.3]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let body := new_polygon #[![-0.28, -0.3], ![0.28, -0.3], ![0.32, 0.3], ![-0.32, 0.3]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Top crenellations (3 rectangles)
-  let cren1 := NewPolygon #[![-0.32, 0.3], ![-0.15, 0.3], ![-0.15, 0.5], ![-0.32, 0.5]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
-  let cren2 := NewPolygon #[![-0.08, 0.3], ![0.08, 0.3], ![0.08, 0.5], ![-0.08, 0.5]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
-  let cren3 := NewPolygon #[![0.15, 0.3], ![0.32, 0.3], ![0.32, 0.5], ![0.15, 0.5]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let cren1 := new_polygon #[![-0.32, 0.3], ![-0.15, 0.3], ![-0.15, 0.5], ![-0.32, 0.5]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
+  let cren2 := new_polygon #[![-0.08, 0.3], ![0.08, 0.3], ![0.08, 0.5], ![-0.08, 0.5]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
+  let cren3 := new_polygon #[![0.15, 0.3], ![0.32, 0.3], ![0.32, 0.5], ![0.15, 0.5]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (cren1 : 𝕋 Mark) + (cren2 : 𝕋 Mark) + (cren3 : 𝕋 Mark))
 
 -- Knight: Horse head (simplified profile)
 def knightShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
   -- Base
-  let base := NewPolygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Neck and head profile
-  let head := NewPolygon #[![-0.2, -0.3], ![-0.1, 0.2], ![0, 0.5], ![0.25, 0.4], ![0.3, 0.1], ![0.2, -0.1], ![0.1, -0.3]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let head := new_polygon #[![-0.2, -0.3], ![-0.1, 0.2], ![0, 0.5], ![0.25, 0.4], ![0.3, 0.1], ![0.2, -0.1], ![0.1, -0.3]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Eye (small circle)
-  let eye := (translate ![0.15, 0.2] : ℍ) * (NewCircle 0.05 ![0, 0]
-    { fillColor := pieceOutlineColor
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 1 } : 𝕋 Mark)
+  let eye := (translate ![0.15, 0.2] : ℍ) * (new_circle 0.05 ![0, 0]
+    { fill_color := pieceOutlineColor
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 1 } : 𝕋 Mark)
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (head : 𝕋 Mark) + eye)
 
 -- Bishop: Pointed mitre with slit
 def bishopShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
   -- Base
-  let base := NewPolygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Body (tapered)
-  let body := NewPolygon #[![-0.2, -0.3], ![0.2, -0.3], ![0.15, 0.2], ![-0.15, 0.2]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let body := new_polygon #[![-0.2, -0.3], ![0.2, -0.3], ![0.15, 0.2], ![-0.15, 0.2]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Head (pointed top)
-  let head := NewPolygon #[![-0.15, 0.2], ![0.15, 0.2], ![0, 0.55]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let head := new_polygon #[![-0.15, 0.2], ![0.15, 0.2], ![0, 0.55]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Small ball on top
-  let ball := (translate ![0, 0.65] : ℍ) * (NewCircle 0.08 ![0, 0]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
+  let ball := (translate ![0, 0.65] : ℍ) * (new_circle 0.08 ![0, 0]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 } : 𝕋 Mark)
   -- Slit in middle (diagonal line decoration)
   let slit := {geom := .polyline #[![-0.08, 0.05], ![0.08, 0.15]],
-               style := {strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2}}
+               style := {stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2}}
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (head : 𝕋 Mark) + (ball : 𝕋 Mark) + ((slit : Prim) : 𝕋 Mark))
 
 -- Queen: Crown with 5 points
 def queenShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
   -- Base
-  let base := NewPolygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Body
-  let body := NewPolygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.1], ![-0.3, 0.1]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let body := new_polygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.1], ![-0.3, 0.1]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Crown (5 pointed top)
-  let crown := NewPolygon #[![-0.3, 0.1], ![-0.25, 0.4], ![-0.15, 0.2], ![0, 0.5], ![0.15, 0.2], ![0.25, 0.4], ![0.3, 0.1]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let crown := new_polygon #[![-0.3, 0.1], ![-0.25, 0.4], ![-0.15, 0.2], ![0, 0.5], ![0.15, 0.2], ![0.25, 0.4], ![0.3, 0.1]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Small balls on crown points
-  let ball1 := (translate ![-0.25, 0.45] : ℍ) * (NewCircle 0.06 ![0, 0]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
-  let ball2 := (translate ![0, 0.55] : ℍ) * (NewCircle 0.06 ![0, 0]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
-  let ball3 := (translate ![0.25, 0.45] : ℍ) * (NewCircle 0.06 ![0, 0]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
+  let ball1 := (translate ![-0.25, 0.45] : ℍ) * (new_circle 0.06 ![0, 0]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 } : 𝕋 Mark)
+  let ball2 := (translate ![0, 0.55] : ℍ) * (new_circle 0.06 ![0, 0]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 } : 𝕋 Mark)
+  let ball3 := (translate ![0.25, 0.45] : ℍ) * (new_circle 0.06 ![0, 0]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 } : 𝕋 Mark)
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (crown : 𝕋 Mark) + ball1 + ball2 + ball3)
 
 -- King: Cross on crown
 def kingShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
   -- Base
-  let base := NewPolygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Body
-  let body := NewPolygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.15], ![-0.3, 0.15]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let body := new_polygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.15], ![-0.3, 0.15]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Crown base
-  let crownBase := NewPolygon #[![-0.3, 0.15], ![0.3, 0.15], ![0.25, 0.35], ![-0.25, 0.35]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let crownBase := new_polygon #[![-0.3, 0.15], ![0.3, 0.15], ![0.25, 0.35], ![-0.25, 0.35]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Cross vertical
-  let crossV := NewPolygon #[![-0.05, 0.35], ![0.05, 0.35], ![0.05, 0.65], ![-0.05, 0.65]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let crossV := new_polygon #[![-0.05, 0.35], ![0.05, 0.35], ![0.05, 0.65], ![-0.05, 0.65]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   -- Cross horizontal
-  let crossH := NewPolygon #[![-0.15, 0.45], ![0.15, 0.45], ![0.15, 0.55], ![-0.15, 0.55]]
-    { fillColor := color
-    , strokeColor := pieceOutlineColor
-    , strokeWidth := StyleSize.px 2 }
+  let crossH := new_polygon #[![-0.15, 0.45], ![0.15, 0.45], ![0.15, 0.55], ![-0.15, 0.55]]
+    { fill_color := color
+    , stroke_color := pieceOutlineColor
+    , stroke_width := StyleSize.px 2 }
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (crownBase : 𝕋 Mark) + (crossV : 𝕋 Mark) + (crossH : 𝕋 Mark))
 
 -- Main function to render any piece

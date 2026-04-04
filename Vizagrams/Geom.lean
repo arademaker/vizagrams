@@ -3,7 +3,7 @@ Copyright (c) 2025 Henrique Borges. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Davi Barreira, Henrique Borges
 -/
-import Vizagrams.LeannearAlgebra
+import Vizagrams.LinearAlgebra
 /-!
 # Geometric Primitives for Vizagrams
 
@@ -36,8 +36,8 @@ inductive Geom where
   | path     (d : String)
   | text     (pos : Vec2) (content : String) (size : Float)
   | arc      (rx ry : Float) (c : Vec2) (rot init final : Float)
-  | qbezier  (Moveto : Vec2) (QbezierCurveto : Vec2 × Vec2)
-  | cbezier  (Moveto : Vec2) (CbezierCurveto : Vec2 × Vec2 × Vec2)
+  | qbezier  (moveto : Vec2) (qbezier_curveto : Vec2 × Vec2)
+  | cbezier  (moveto : Vec2) (cbezier_curveto : Vec2 × Vec2 × Vec2)
 deriving Repr, Inhabited
 
 /--
@@ -55,8 +55,8 @@ inductive CovGeom where
   | path     (d : String)
   | text     (pos : Vec2) (content : String) (size : Float)
   | arc      (p1 p2 c p4 p5 : Vec2)
-  | qbezier  (Moveto : Vec2) (QbezierCurveto : Vec2 × Vec2)
-  | cbezier  (Moveto : Vec2) (CbezierCurveto : Vec2 × Vec2 × Vec2)
+  | qbezier  (moveto : Vec2) (qbezier_curveto : Vec2 × Vec2)
+  | cbezier  (moveto : Vec2) (cbezier_curveto : Vec2 × Vec2 × Vec2)
 deriving Repr
 
 /-- Converts a semantic `Geom` to its covariant representation `CovGeom`. -/
@@ -72,10 +72,10 @@ def ϕ : Geom → CovGeom
   | .path d                => .path d
   | .text pos content size => .text pos content size
   | .arc rx ry c rot i f     =>
-      let p1 := rotateVec2 (![rx, 0]) rot + c
-      let p2 := rotateVec2 (![0, ry]) rot + c
-      let p4 := rotateVec2 (pointOnEllipse i rx ry) rot + c
-      let p5 := rotateVec2 (pointOnEllipse f rx ry) rot + c
+      let p1 := rotate_vec2 (![rx, 0]) rot + c
+      let p2 := rotate_vec2 (![0, ry]) rot + c
+      let p4 := rotate_vec2 (point_on_ellipse i rx ry) rot + c
+      let p5 := rotate_vec2 (point_on_ellipse f rx ry) rot + c
       .arc p1 p2 c p4 p5
   | .qbezier m cv          => .qbezier m cv
   | .cbezier bpts cpts     => .cbezier bpts cpts
@@ -101,11 +101,11 @@ def ψ : CovGeom → Geom
   | .arc p1 p2 c p4 p5       =>
       let rx := ‖ (p1 - c) ‖;
       let ry := ‖ (p2 - c) ‖;
-      let rot := atan2pi (p1 - c)
-      let v1 := rotateVec2 (p4 - c) (-rot)
-      let i := atan2pi ![v1 0 / rx, v1 1 / ry]
-      let v2 := rotateVec2 (p5 - c) (-rot)
-      let f := atan2pi ![v2 0 / rx, v2 1 / ry]
+      let rot := atan2_pi (p1 - c)
+      let v1 := rotate_vec2 (p4 - c) (-rot)
+      let i := atan2_pi ![v1 0 / rx, v1 1 / ry]
+      let v2 := rotate_vec2 (p5 - c) (-rot)
+      let f := atan2_pi ![v2 0 / rx, v2 1 / ry]
       .arc rx ry c rot i f
   | .qbezier m cv          => .qbezier m cv
   | .cbezier bpts cpts     => .cbezier bpts cpts

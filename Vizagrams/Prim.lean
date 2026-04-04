@@ -78,16 +78,16 @@ instance : HMul Style (Array Prim) (Array Prim) where
   hMul s ps := ps.map (s * ·)
 
 /-- Apply a style transformation to a single primitive. -/
-def applyStyle (s : Style) (p : Prim) : Prim := s * p
+def apply_style (s : Style) (p : Prim) : Prim := s * p
 
 /-- Apply a style transformation to an array of primitives. -/
-def applyStyleArray (s : Style) (ps : Array Prim) : Array Prim := s * ps
+def apply_style_array (s : Style) (ps : Array Prim) : Array Prim := s * ps
 
 /-- Apply a geometric transformation to a single primitive. -/
-def applyTransform (g : Mat2Vec2) (p : Prim) : Prim := g * p
+def apply_transform (g : Mat2Vec2) (p : Prim) : Prim := g * p
 
 /-- Apply a geometric transformation to an array of primitives. -/
-def applyTransformArray (g : Mat2Vec2) (ps : Array Prim) : Array Prim := g * ps
+def apply_transform_array (g : Mat2Vec2) (ps : Array Prim) : Array Prim := g * ps
 
 /--
 Type class for composing graphical primitives into arrays.

@@ -22,7 +22,7 @@ The rendering pipeline follows this flow:
 ```
 𝕋 Mark  →  Array Prim  →  Array (Element Frame)  →  SVG  →  HTML
    ↓           ↓                ↓                    ↓        ↓
- (flat)   (primToElem)    (Svg.toHtml)         (render)  (display)
+ (flat)   (prim_to_elem)    (Svg.toHtml)         (render)  (display)
 ```
 
 ## Key Components
@@ -47,7 +47,7 @@ The rendering pipeline follows this flow:
 
 ```lean
 -- Create marks
-let circle := NewCircle 1 ![0, 0] {fillColor := Color.mk 1 0 0}
+let circle := NewCircle 1 ![0, 0] {fill_color := Color.mk 1 0 0}
 let square := NewPolygon #[![-1,-1], ![1,-1], ![1,1], ![-1,1]] {}
 
 -- Compose and render
@@ -77,7 +77,7 @@ private def frame : Frame where
   width  := 400
   height := 400
 
-def defaultFrame : Frame where
+def default_frame : Frame where
   xmin   := -3
   ymin   := -3
   xSize  := 10
@@ -87,13 +87,13 @@ def defaultFrame : Frame where
 /--
 Convert a `Vec2` (abstract 2D vector) to a `Point` in the given frame's coordinate system.
 -/
-def vecToPoint (x : Vec2) (fr : Frame) : Point fr :=
+def vec_to_point (x : Vec2) (fr : Frame) : Point fr :=
   Point.abs (x 0) (x 1)
 
 /--
 Convert a `Point` in a frame's coordinate system back to a `Vec2`.
 -/
-def pointToVec {fr : Frame} (p : Point fr) : Vec2 :=
+def point_to_vec {fr : Frame} (p : Point fr) : Vec2 :=
   match Point.toAbsolute p with
     | (x, y) => ![x,y]
 
@@ -101,7 +101,7 @@ def pointToVec {fr : Frame} (p : Point fr) : Vec2 :=
 Normalize an angle to the range [0, 2π).
 This is used for arc rendering to ensure angles are in the correct range.
 -/
-def mod2π (θ : Float) : Float :=
+def mod_2π (θ : Float) : Float :=
   let twoPi := 2.0 * π
   let r := θ - twoPi * Float.floor (θ / twoPi)
   if r < 0 then r + twoPi else r
@@ -109,11 +109,11 @@ def mod2π (θ : Float) : Float :=
 /--
 Convert a `Vec2` to a space-separated coordinate string for SVG path data.
 -/
-def getCoordinates (v : Vec2) : String :=
+def get_coordinates (v : Vec2) : String :=
   s!"{v 0} {v 1}"
 
 /--
-**geomToShape**: Convert a geometric primitive to an SVG shape.
+**geom_to_shape**: Convert a geometric primitive to an SVG shape.
 
 This is the core rendering function that maps our abstract geometry representation
 to ProofWidgets' SVG shapes. It handles:
@@ -127,33 +127,33 @@ to ProofWidgets' SVG shapes. It handles:
 - Bézier curves use SVG path syntax (Q for quadratic, C for cubic)
 - Y-coordinates are flipped to match SVG's top-down coordinate system
 -/
-def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
+def geom_to_shape (g : Geom) (fr : Frame) : Shape fr :=
   match g with
   | .line src trg =>
-      Shape.line (vecToPoint src fr) (vecToPoint trg fr)
+      Shape.line (vec_to_point src fr) (vec_to_point trg fr)
   | .circle r c =>
-      Shape.circle (vecToPoint c fr) (Size.abs r)
+      Shape.circle (vec_to_point c fr) (Size.abs r)
   | .ellipse rx ry c =>
-      Shape.ellipse (vecToPoint c fr) (Size.abs rx) (Size.abs ry)
+      Shape.ellipse (vec_to_point c fr) (Size.abs rx) (Size.abs ry)
   | .rect corner width height =>
-      Shape.rect (vecToPoint corner fr) (Size.abs width) (Size.abs height)
+      Shape.rect (vec_to_point corner fr) (Size.abs width) (Size.abs height)
   | .polyline points =>
-      Shape.polyline (points.map (vecToPoint · fr))
+      Shape.polyline (points.map (vec_to_point · fr))
   | .polygon points =>
-      Shape.polygon (points.map (vecToPoint · fr))
+      Shape.polygon (points.map (vec_to_point · fr))
   | .path d =>
       Shape.path d
   | .text pos content size =>
-      Shape.text (vecToPoint pos fr) content (Size.abs size)
+      Shape.text (vec_to_point pos fr) content (Size.abs size)
   | .arc rx ry c rot init final =>
-    let p0 := rotateVec2 (pointOnEllipse init rx ry) rot + c
-    let p1 := rotateVec2 (pointOnEllipse final rx ry) rot + c
+    let p0 := rotate_vec2 (point_on_ellipse init rx ry) rot + c
+    let p1 := rotate_vec2 (point_on_ellipse final rx ry) rot + c
     let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y
     let x0 := toString (p0 0)
     let y0 := toString (flipY (p0 1))
     let x1 := toString (p1 0)
     let y1 := toString (flipY (p1 1))
-    let θdiff := mod2π (final - init)
+    let θdiff := mod_2π (final - init)
     let largeArc := if Float.abs θdiff > π  then "1" else "0"
     let sweep    := if θdiff ≥ 0 then "0" else "1"
     let rotDeg   := toString (rot * 180.0 / π )
@@ -165,15 +165,15 @@ def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
     Shape.path d
 
   | .qbezier m q =>
-    let d := s!"M {getCoordinates m } Q {getCoordinates q.fst} {getCoordinates q.snd}"
+    let d := s!"M {get_coordinates m } Q {get_coordinates q.fst} {get_coordinates q.snd}"
     Shape.path d
 
   | .cbezier m (c1, c2, p1) =>
         let flipY (y : Float) := 2 * fr.ymin + Frame.ySize fr - y
-        let start := vecToPoint m fr
-        let endPt := vecToPoint p1 fr
-        let ctrl1 := vecToPoint c1 fr
-        let ctrl2 := vecToPoint c2 fr
+        let start := vec_to_point m fr
+        let endPt := vec_to_point p1 fr
+        let ctrl1 := vec_to_point c1 fr
+        let ctrl2 := vec_to_point c2 fr
         let (x0, y0) := start.toAbsolute
         let (x1, y1) := endPt.toAbsolute
         let (cx1, cy1) := ctrl1.toAbsolute
@@ -185,19 +185,19 @@ def geomToShape (g : Geom) (fr : Frame) : Shape fr :=
 Convert a `Prim` (primitive with styling) to an SVG `Element`.
 Combines the geometric shape with its associated styling attributes.
 -/
-def primToElem (p : Prim) (fr : Frame) : Element fr :=
-  { shape := geomToShape p.geom fr
-  , fillColor := p.style.fillColor
-  , strokeColor := p.style.strokeColor
-  , strokeWidth := styleToSvgSize p.style.strokeWidth fr
+def prim_to_elem (p : Prim) (fr : Frame) : Element fr :=
+  { shape := geom_to_shape p.geom fr
+  , fillColor := p.style.fill_color
+  , strokeColor := p.style.stroke_color
+  , strokeWidth := style_to_svg_size p.style.stroke_width fr
   }
 
 /--
 Render an array of primitives as SVG within the given frame.
 This is the low-level rendering function that directly converts primitives to HTML.
 -/
-def drawsvg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
-  let svg : ProofWidgets.Svg fr := { elements := Array.map (λx => primToElem x fr) a}
+def draw_svg (a : Array Prim) (fr : Frame := frame) : ProofWidgets.Html :=
+  let svg : ProofWidgets.Svg fr := { elements := Array.map (λx => prim_to_elem x fr) a}
   svg.toHtml
 
 /--
@@ -219,7 +219,7 @@ let customFrame : Frame := { xmin := -5, ymin := -5, xSize := 10, ... }
 ```
 -/
 def draw (t : 𝕋 GraphicalMark.Mark) (fr : Frame := frame) : ProofWidgets.Html :=
-  drawsvg (flat t ) fr
+  draw_svg (flat t ) fr
 
 /-!
 ### Primitive Constructors
@@ -237,7 +237,8 @@ Create a circle primitive.
 - `c`: Center position as `Vec2` (default: origin)
 - `st`: Style (default: black fill)
 -/
-def NewCircle (r : Float := 1) (c : Vec2 := ![0,0]) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
+def new_circle (r : Float := 1) (c : Vec2 := ![0,0])
+    (st : Style := {fill_color := Color.mk 0 0 0}) : Prim :=
   let rc := Geom.circle r c
   {geom := rc, style := st}
 
@@ -248,7 +249,7 @@ Create a polygon primitive from an array of vertices.
 - `pts`: Array of vertices as `Vec2`
 - `st`: Style (default: black fill)
 -/
-def NewPolygon (pts : Array (Vec2)) (st : Style := {fillColor := Color.mk 0 0 0}) : Prim :=
+def new_polygon (pts : Array (Vec2)) (st : Style := {fill_color := Color.mk 0 0 0}) : Prim :=
   let p := Geom.polygon pts
   {geom := p , style := st}
 
@@ -260,7 +261,7 @@ Create a line segment primitive.
 - `l₂`: End point as `Vec2`
 - `st`: Style (default: black stroke)
 -/
-def NewLine ( l₁ l₂  : Vec2 ) ( st : Style := {strokeColor := Color.mk 0 0 0} ): Prim :=
+def new_line ( l₁ l₂  : Vec2 ) ( st : Style := {stroke_color := Color.mk 0 0 0} ): Prim :=
   let line := Geom.line l₁ l₂
   {geom := line , style := st}
 
@@ -273,7 +274,8 @@ Create a text primitive.
 - `size`: Font size (default: 1)
 - `st`: Style (default: black fill)
 -/
-def NewText (content : String) (pos : Vec2 := ![0,0] ) (size : Float := 1) ( st : Style := {fillColor := Color.mk 0 0 0} ): Prim :=
+def new_text (content : String) (pos : Vec2 := ![0,0]) (size : Float := 1)
+    (st : Style := {fill_color := Color.mk 0 0 0}) : Prim :=
   let text := Geom.text pos content size
   {geom := text , style := st}
 
@@ -285,7 +287,7 @@ Create a quadratic Bézier curve primitive.
 - `q`: Control point and end point as `Vec2 × Vec2`
 - `st`: Style (default: empty)
 -/
-def NewQBezier (m : Vec2) (q : Vec2 × Vec2) (st : Style := {}) : Prim :=
+def new_qbezier (m : Vec2) (q : Vec2 × Vec2) (st : Style := {}) : Prim :=
   let bezier := Geom.qbezier m q
   {geom := bezier , style := st}
 
@@ -326,6 +328,6 @@ This is the recommended rendering function for most use cases. It:
 This ensures the entire diagram is visible and well-centered, regardless of its size or position.
 -/
 def draw₁ (t : 𝕋 GraphicalMark.Mark) : ProofWidgets.Html :=
-  draw t (BoundingBox.toFrame (Envelope.boundingBox𝕋 t))
+  draw t (BoundingBox.toFrame (Envelope.bounding_box_𝕋 t))
 
 end VizBackend

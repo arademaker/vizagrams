@@ -83,7 +83,7 @@ dot product `⟨p, v⟩` over all points `p` in the array.
 
 **Returns:** Maximum projection in direction `v`, or 0.0 for empty arrays
 -/
-def envelopePts (pts : Array Vec2) (v : Vec2) : Float :=
+def envelope_pts (pts : Array Vec2) (v : Vec2) : Float :=
   if h : pts.size > 0 then
     let first := pts[0]!
     let init  := ⟪v, first⟫
@@ -103,7 +103,7 @@ B(t) = (1-t)² · p0 + 2(1-t)t · c + t² · p1
 ```
 where `t ∈ [0,1]` parameterizes the curve.
 -/
-def sampleQBezier (p0 c p1 : Vec2) (n : Nat) : Array Vec2 :=
+def sample_qbezier (p0 c p1 : Vec2) (n : Nat) : Array Vec2 :=
   List.range n |>.map (fun i =>
     let t := Float.ofNat i / Float.ofNat (n - 1)
     let oneMinusT := 1 - t
@@ -124,7 +124,7 @@ B(t) = (1-t)³ · p0 + 3(1-t)²t · c1 + 3(1-t)t² · c2 + t³ · p1
 ```
 where `t ∈ [0,1]` parameterizes the curve.
 -/
-def sampleCBezier (p0 c1 c2 p1 : Vec2) (n : Nat) : Array Vec2 :=
+def sample_cbezier (p0 c1 c2 p1 : Vec2) (n : Nat) : Array Vec2 :=
   List.range n |>.map (fun i =>
     let t := Float.ofNat i / Float.ofNat (n - 1)
     let oneMinusT := 1 - t
@@ -202,7 +202,7 @@ def envelope (g : Geom) (v' : Vec2) : Float :=
 
       -- Find maximum projection of corners in direction v
       let corners := #[bottomLeft, bottomRight, topLeft, topRight]
-      envelopePts corners v
+      envelope_pts corners v
   | .arc rx ry c rot init final =>
       -- Sample points along the arc and compute maximum envelope
       let steps := 32
@@ -210,16 +210,16 @@ def envelope (g : Geom) (v' : Vec2) : Float :=
         let t := Float.ofNat i / Float.ofNat (steps : Nat)
         init + t * (final - init))
       let pts := angles.map (fun θ =>
-        let p := pointOnEllipse θ rx ry
-        rotateVec2 p rot + c)
-      envelopePts pts.toArray v
+        let p := point_on_ellipse θ rx ry
+        rotate_vec2 p rot + c)
+      envelope_pts pts.toArray v
   | .qbezier m (c, q) =>
-      let pts := sampleQBezier m c q 20
-      envelopePts pts v
+      let pts := sample_qbezier m c q 20
+      envelope_pts pts v
 
   | .cbezier m (c1, c2, p1) =>
-      let pts := sampleCBezier m c1 c2 p1 20
-      envelopePts pts v
+      let pts := sample_cbezier m c1 c2 p1 20
+      envelope_pts pts v
 
 
 /-!
@@ -243,7 +243,8 @@ structure BoundingBox where
   upper : Vec2
 deriving Repr, Inhabited
 
-def boundingBox (g : Geom) : BoundingBox :=
+/-- **Bounding Box of Geom**: Compute the axis-aligned bounding box of a geometric primitive. -/
+def bounding_box (g : Geom) : BoundingBox :=
   let ex₁ := envelope g (![1.0, 0.0])
   let ex₂ := envelope g (![-1.0, 0.0])
   let ey₁ := envelope g (![0.0, 1.0])
@@ -267,14 +268,21 @@ def BoundingBox.union (b₁ b₂ : BoundingBox) : BoundingBox :=
   { lower := ![lx, ly], upper := ![ux, uy] }
 
 
-def boundingBoxGroup (gs : Array Geom) : BoundingBox :=
+/-- **Bounding Box of Geom Array**: Union bounding box over an array of geometric primitives. -/
+def bounding_box_group (gs : Array Geom) : BoundingBox :=
   if h : gs.size > 0 then
-    let firstBB := boundingBox gs[0]     -- bounding box of a single Geom
-    gs.foldl (fun acc g => acc.union (boundingBox g)) firstBB
+    let firstBB := bounding_box gs[0]     -- bounding box of a single Geom
+    gs.foldl (fun acc g => acc.union (bounding_box g)) firstBB
   else
     { lower := ![0.0, 0.0], upper := ![0.0, 0.0] }
 
-def envelopePosition (g₁ : Geom) ( v : Vec2 ) ( g₂ : Geom ) (gap : Float := 0): Geom :=
+/--
+**Envelope Position (Geom)**: Place `g₂` adjacent to `g₁` in direction `v`.
+
+Translates `g₂` so that its envelope in direction `-v` touches `g₁`'s envelope in direction `v`,
+with an optional `gap` between them.
+-/
+def envelope_position (g₁ : Geom) ( v : Vec2 ) ( g₂ : Geom ) (gap : Float := 0): Geom :=
   let v₁ := normalize v
   let offset := (envelope g₁ v₁) + (envelope g₂ (-v₁)) + gap
   let position := offset • v₁
@@ -287,29 +295,31 @@ High-level layout operations using envelope calculations.
 -/
 
 /-- **Horizontal Stack Right**: Position `g₂` to the right of `g₁`. -/
-def hStackRight (g₁ g₂ : Geom) : Geom :=
-  envelopePosition g₁ ![1,0] g₂
+def h_stack_right (g₁ g₂ : Geom) : Geom :=
+  envelope_position g₁ ![1,0] g₂
 
 /-- **Horizontal Stack Left**: Position `g₂` to the left of `g₁`. -/
-def hStackLeft (g₁ g₂ : Geom) : Geom :=
-  envelopePosition g₁ ![-1,0] g₂
+def h_stack_left (g₁ g₂ : Geom) : Geom :=
+  envelope_position g₁ ![-1,0] g₂
 
 /-- **Vertical Stack Up**: Position `g₂` above `g₁`. -/
-def vStackUp (g₁ g₂ : Geom) : Geom :=
-  envelopePosition g₁ ![0,1] g₂
+def v_stack_up (g₁ g₂ : Geom) : Geom :=
+  envelope_position g₁ ![0,1] g₂
 
 /-- **Vertical Stack Down**: Position `g₂` below `g₁`. -/
-def vStackDown (g₁ g₂ : Geom) : Geom :=
-  envelopePosition g₁ ![0,-1] g₂
+def v_stack_down (g₁ g₂ : Geom) : Geom :=
+  envelope_position g₁ ![0,-1] g₂
 
-def centerGeom (g : Geom) : Geom :=
+/-- **Center Geom**: Translate a geometric primitive so its bounding box is centered at origin. -/
+def center_geom (g : Geom) : Geom :=
   let dx := (envelope g (![1,0]) - envelope g (![-1,0])) / 2
   let dy := (envelope g (![0,1]) - envelope g (![0,-1])) / 2
   translate (![-dx, -dy]) * g
 
 
-def boundingBoxPrim (p : Prim) : BoundingBox :=
-  boundingBox p.geom
+/-- **Bounding Box of Prim**: Compute the axis-aligned bounding box of a graphical primitive. -/
+def bounding_box_prim (p : Prim) : BoundingBox :=
+  bounding_box p.geom
 
 /-!
 ### Primitive-Level Bounding Box Operations
@@ -318,37 +328,48 @@ Bounding box calculations for graphical primitives.
 -/
 
 /-- **Primitive Bounding Box Union**: Union of bounding boxes from an array of primitives. -/
-def boundingBoxPrims (ps : Array Prim) : BoundingBox :=
+def bounding_box_prims (ps : Array Prim) : BoundingBox :=
   if h : ps.size > 0 then
-    let firstBB := boundingBoxPrim ps[0]
-    ps.foldl (fun acc p => acc.union (boundingBoxPrim p)) firstBB
+    let firstBB := bounding_box_prim ps[0]
+    ps.foldl (fun acc p => acc.union (bounding_box_prim p)) firstBB
   else
     -- Empty array: degenerate bounding box at origin
     { lower := ![0.0,0.0], upper := ![0.0,0.0] }
 
-def centerPrim (p : Prim) : Prim :=
-  { geom := centerGeom p.geom, style := p.style }
+/-- **Center Prim**: Translate a primitive so that its bounding box is centered at the origin. -/
+def center_prim (p : Prim) : Prim :=
+  { geom := center_geom p.geom, style := p.style }
 
-def centerPrims (ps : Array Prim) : Array Prim :=
-  ps.map centerPrim
+/-- **Center Prims**: Translate an array of primitives so their collective bounding box is
+centered at the origin. -/
+def center_prims (ps : Array Prim) : Array Prim :=
+  ps.map center_prim
 
-def envelopePositionPrim (p₁ : Prim) (v : Vec2) (p₂ : Prim) (gap : Float := 0): Prim :=
-  let g := envelopePosition p₁.geom v p₂.geom gap
+/-- **Envelope Position (Prim)**: Place `p₂` adjacent to `p₁` in direction `v`,
+with optional `gap`. -/
+def envelope_position_prim (p₁ : Prim) (v : Vec2) (p₂ : Prim) (gap : Float := 0): Prim :=
+  let g := envelope_position p₁.geom v p₂.geom gap
   { geom := g , style := p₂.style : Prim}
 
-def envelopeArray (A : Array Prim) (v : Vec2) : Float :=
+/-- **Envelope of Prim Array**: Maximum envelope of an array of primitives in direction `v`. -/
+def envelope_array (A : Array Prim) (v : Vec2) : Float :=
   A.foldl (λ acc p => max acc (envelope p.geom v)) 0
 
-def envelopePositionPrims (A : Array Prim) (v : Vec2) (p₂ : Prim) (gap : Float := 0) : Prim :=
+/-- **Envelope Position (Array → Prim)**: Place `p₂` adjacent to array `A` in direction `v`,
+with optional `gap`. -/
+def envelope_position_prims (A : Array Prim) (v : Vec2) (p₂ : Prim) (gap : Float := 0) : Prim :=
   let v₁ := normalize v
-  let offset := (envelopeArray A v₁) + (envelope p₂.geom (-v₁)) + gap
+  let offset := (envelope_array A v₁) + (envelope p₂.geom (-v₁)) + gap
   let position := offset • v₁
   let g := translate position * p₂.geom
   { geom := g , style := p₂.style : Prim }
 
-def envelopePositionPrimsArray (A : Array Prim) (v : Vec2) (B : Array Prim) (gap : Float := 0) : Array Prim :=
+/-- **Envelope Position (Array → Array)**: Translate array `B` adjacent to `A` in direction `v`,
+with optional `gap`. -/
+def envelope_position_prims_array
+    (A : Array Prim) (v : Vec2) (B : Array Prim) (gap : Float := 0) : Array Prim :=
   let v₁ := normalize v
-  let offset := (envelopeArray A v₁) + (envelopeArray B (-v₁)) + gap
+  let offset := (envelope_array A v₁) + (envelope_array B (-v₁)) + gap
   let position := offset • v₁
   B.map (fun p =>
     { geom := translate position * p.geom
@@ -361,31 +382,31 @@ Layout operations for arrays of primitives with gap control.
 -/
 
 /-- **Horizontal Stack Right (Arrays)**: Position array `p₂` to the right of array `A`. -/
-def hStackRightPrims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
-  A ⊕ (envelopePositionPrimsArray A ![1,0] p₂ gap)
+def h_stack_right_prims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
+  A ⊕ (envelope_position_prims_array A ![1,0] p₂ gap)
 
 /-- **Horizontal Stack Left (Arrays)**: Position array `p₂` to the left of array `A`. -/
-def hStackLeftPrims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
-  A ⊕ (envelopePositionPrimsArray A ![-1,0] p₂ gap)
+def h_stack_left_prims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
+  A ⊕ (envelope_position_prims_array A ![-1,0] p₂ gap)
 
 /-- **Vertical Stack Up (Arrays)**: Position array `p₂` above array `A`. -/
-def vStackUpPrims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
-  A ⊕ (envelopePositionPrimsArray A ![0,1] p₂ gap)
+def v_stack_up_prims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
+  A ⊕ (envelope_position_prims_array A ![0,1] p₂ gap)
 
 /-- **Vertical Stack Down (Arrays)**: Position array `p₂` below array `A`. -/
-def vStackDownPrims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
-  A ⊕ (envelopePositionPrimsArray A ![0,-1] p₂ gap)
+def v_stack_down_prims (A : Array Prim) (p₂ : Array Prim) (gap : Float := 0) : Array Prim :=
+  A ⊕ (envelope_position_prims_array A ![0,-1] p₂ gap)
 
-infixr:70 " → " => hStackRightPrims
-infixr:70 " ← " => hStackLeftPrims
-infixr:70 " ↑ " => vStackUpPrims
-infixr:70 " ↓ " => vStackDownPrims
+infixr:70 " → " => h_stack_right_prims
+infixr:70 " ← " => h_stack_left_prims
+infixr:70 " ↑ " => v_stack_up_prims
+infixr:70 " ↓ " => v_stack_down_prims
 
 -- Layout operators with explicit gap control: "A →[g] B" syntax
-notation:70 A " →[" g "] " B => hStackRightPrims A B g
-notation:70 A " ←[" g "] " B => hStackLeftPrims  A B g
-notation:70 A " ↑[" g "] " B => vStackUpPrims    A B g
-notation:70 A " ↓[" g "] " B => vStackDownPrims  A B g
+notation:70 A " →[" g "] " B => h_stack_right_prims A B g
+notation:70 A " ←[" g "] " B => h_stack_left_prims  A B g
+notation:70 A " ↑[" g "] " B => v_stack_up_prims    A B g
+notation:70 A " ↓[" g "] " B => v_stack_down_prims  A B g
 
 /-!
 ### Mark-Level Bounding Box Operations
@@ -399,21 +420,30 @@ Bounding box calculations for graphical marks using their rendering interface.
 Computes bounding box by aggregating primitives returned by the mark's θ function.
 Works for any type implementing `MarkInterface`.
 -/
-def boundingBoxMark {T : Type} [inst : MarkInterface T] (m : T) : BoundingBox :=
-  boundingBoxPrims (inst.θ m)
+def bounding_box_mark {T : Type} [inst : MarkInterface T] (m : T) : BoundingBox :=
+  bounding_box_prims (inst.θ m)
 
-def boundingBoxOfMark (m : Mark) : BoundingBox :=
-  boundingBoxPrims m.θ
+/-- **Bounding Box of Mark**: Compute the bounding box of an existentially-wrapped `Mark`. -/
+def bounding_box_of_mark (m : Mark) : BoundingBox :=
+  bounding_box_prims m.θ
 
 
-def boundingBox𝕋 (t : 𝕋 Mark) : BoundingBox :=
-  boundingBoxPrims (flat t)
+/-- **Bounding Box of Mark Tree**: Compute the bounding box of a composed mark tree `𝕋 Mark`. -/
+def bounding_box_𝕋 (t : 𝕋 Mark) : BoundingBox :=
+  bounding_box_prims (flat t)
 
-def envelopePositionMarks (𝕄₁ : 𝕋 Mark) ( v : Vec2) (𝕄₂ : 𝕋 Mark) (gap : Float := 0): 𝕋 Mark :=
+/--
+**Envelope Position (Marks)**: Place mark tree `𝕄₂` adjacent to `𝕄₁` in direction `v`.
+
+Evaluates both trees to primitives, computes the required translation, and wraps `𝕄₂`
+in a homomorphism that applies that translation.
+-/
+def envelope_position_marks
+    (𝕄₁ : 𝕋 Mark) (v : Vec2) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
   let 𝕞₁ := flat 𝕄₁
   let 𝕞₂ := flat 𝕄₂
   let v₁ := normalize v
-  let offset := (envelopeArray 𝕞₁ v₁) + (envelopeArray 𝕞₂ (-v₁)) + gap
+  let offset := (envelope_array 𝕞₁ v₁) + (envelope_array 𝕞₂ (-v₁)) + gap
   let position := offset • v₁
   let h : ℍ := { s := {} , g := translate position }
   h * 𝕄₂
@@ -425,28 +455,31 @@ High-level layout operations for the free monad mark system.
 -/
 
 /-- **Horizontal Stack Right (Marks)**: Position mark tree `𝕄₂` to the right of `𝕄₁`. -/
-def hStackRightMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
-  𝕄₁ + (envelopePositionMarks 𝕄₁ ![1,0] 𝕄₂ gap)
+def h_stack_right_marks
+    (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelope_position_marks 𝕄₁ ![1,0] 𝕄₂ gap)
 
 /-- **Horizontal Stack Left (Marks)**: Position mark tree `𝕄₂` to the left of `𝕄₁`. -/
-def hStackLeftMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
-  𝕄₁ + (envelopePositionMarks 𝕄₁ ![-1,0] 𝕄₂ gap)
+def h_stack_left_marks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelope_position_marks 𝕄₁ ![-1,0] 𝕄₂ gap)
 
-def vStackUpMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
-  𝕄₁ + (envelopePositionMarks 𝕄₁ ![0,1] 𝕄₂ gap)
+/-- **Vertical Stack Up (Marks)**: Position mark tree `𝕄₂` above `𝕄₁`. -/
+def v_stack_up_marks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelope_position_marks 𝕄₁ ![0,1] 𝕄₂ gap)
 
-def vStackDownMarks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
-  𝕄₁ + (envelopePositionMarks 𝕄₁ ![0,-1] 𝕄₂ gap)
+/-- **Vertical Stack Down (Marks)**: Position mark tree `𝕄₂` below `𝕄₁`. -/
+def v_stack_down_marks (𝕄₁ : 𝕋 Mark) (𝕄₂ : 𝕋 Mark) (gap : Float := 0) : 𝕋 Mark :=
+  𝕄₁ + (envelope_position_marks 𝕄₁ ![0,-1] 𝕄₂ gap)
 
-infixr:70 " → " => hStackRightMarks
-infixr:70 " ← " => hStackLeftMarks
-infixr:70 " ↑ " => vStackUpMarks
-infixr:70 " ↓ " => vStackDownMarks
+infixr:70 " → " => h_stack_right_marks
+infixr:70 " ← " => h_stack_left_marks
+infixr:70 " ↑ " => v_stack_up_marks
+infixr:70 " ↓ " => v_stack_down_marks
 
-notation:70 A " →[" g "] " B => hStackRightMarks A B g
-notation:70 A " ←[" g "] " B => hStackLeftMarks  A B g
-notation:70 A " ↑[" g "] " B => vStackUpMarks    A B g
-notation:70 A " ↓[" g "] " B => vStackDownMarks  A B g
-notation:70 A " ↗[" v ", " g "]" B => A + envelopePositionMarks A v B g
+notation:70 A " →[" g "] " B => h_stack_right_marks A B g
+notation:70 A " ←[" g "] " B => h_stack_left_marks  A B g
+notation:70 A " ↑[" g "] " B => v_stack_up_marks    A B g
+notation:70 A " ↓[" g "] " B => v_stack_down_marks  A B g
+notation:70 A " ↗[" v ", " g "]" B => A + envelope_position_marks A v B g
 
 end Envelope

@@ -16,7 +16,7 @@ d = Arrow()
 draw(d, height=100)
 -/
 
--- Criando Mark Arrow
+-- Arrow Mark
 structure Arrow where
     pts : Vec2 × Vec2
     headsize : Float
@@ -25,15 +25,15 @@ structure Arrow where
 
 instance : MarkInterface Arrow where
   θ m :=
-    let line : 𝕋 Mark := NewLine (m.pts.fst) (m.pts.snd)  {strokeColor := Color.mk 1 0 0 ,
-                                                            strokeWidth := Sty.StyleSize.px 10 }
-    let 𝕞 : 𝕋 Mark := envelopePositionMarks line (m.pts.snd - m.pts.fst) m.headmark
+    let line : 𝕋 Mark := new_line (m.pts.fst) (m.pts.snd)  {stroke_color := Color.mk 1 0 0 ,
+                                                            stroke_width := Sty.StyleSize.px 10 }
+    let 𝕞 : 𝕋 Mark := envelope_position_marks line (m.pts.snd - m.pts.fst) m.headmark
     flat ( line + 𝕞)
 
 instance : Coe Arrow Mark where
  coe m := Mark.mk m
 
--- Criando Mark de poligono regular
+-- Regular Polygon Mark
 structure RegularPolygon where
   center : Vec2 := ![0,0]
   sides : Nat
@@ -60,25 +60,25 @@ def regToPoly (p : RegularPolygon) : Array (Vec2) :=
   Array.map findPointbyAngle Arr
 
 instance : MarkInterface RegularPolygon where
-  θ h := NewPolygon (regToPoly h) h.style
+  θ h := new_polygon (regToPoly h) h.style
 
 instance : Coe RegularPolygon Mark where
   coe m := Mark.mk m
 
--- Desenhando uma Arrow com um Triangulo como HeadMark
-def triangle : RegularPolygon := {center := ![0, 0], sides := 3 , size := 1, style := {fillColor := Color.mk 0 0 1 }}
+-- Drawing an Arrow with a Triangle as HeadMark
+def triangle : RegularPolygon := {center := ![0, 0], sides := 3 , size := 1, style := {fill_color := Color.mk 0 0 1 }}
 #html draw₁ triangle
 
 def arrow₁ : 𝕋 Mark :=
   {
     pts := (![0, 0], ![2, 0]),
     headsize := 0.3,
-    headstyle := {fillColor := Color.mk 1 0 0},
+    headstyle := {fill_color := Color.mk 1 0 0},
     headmark := Mark.mk {
       center := ![0, 0],
       sides := 3,
       size := 0.3,
-      style := {fillColor := Color.mk 1 0 0}
+      style := {fill_color := Color.mk 1 0 0}
     : RegularPolygon}
   : Arrow }
 
@@ -91,7 +91,7 @@ def 𝕋scale (y : Float) : ℍ := ℍ.mk {} (scale y)
 #html draw₁ (𝕋scale 0.5 * arrow₁)
 def 𝕋translate (v : Vec2) : ℍ := ℍ.mk {} (translate v)
 
--- Criando Estrutura d eFace
+-- Face Mark
 structure Face where
   center     : Vec2 := ![0, 0]
   size       : Float := 1
@@ -102,31 +102,31 @@ structure Face where
 
 instance : MarkInterface Face where
   θ f :=
-    -- estilos --------------------------------------------
-    let eyeStyle  := { fillColor := some (Color.mk 0 0 1) } ++ f.eyestyle
+    -- styles ---------------------------------------------
+    let eyeStyle  := { fill_color := some (Color.mk 0 0 1) } ++ f.eyestyle
     let headStyle :=
-      { fillColor := some (Color.mk 1 1 1),
-        strokeColor := some (Color.mk 0 0 0) } ++ f.headstyle
-    let smileStyle := { fillColor := none } ++ f.smilestyle
+      { fill_color := some (Color.mk 1 1 1),
+        stroke_color := some (Color.mk 0 0 0) } ++ f.headstyle
+    let smileStyle := { fill_color := none } ++ f.smilestyle
 
-    -- cabeça ---------------------------------------------
-    let head : 𝕋 Mark := NewCircle 5 f.center headStyle
+    -- head -----------------------------------------------
+    let head : 𝕋 Mark := new_circle 5 f.center headStyle
 
-    -- olhos ----------------------------------------------
+    -- eyes -----------------------------------------------
     let eyeOffsetY : Float :=  2
     let eyeOffsetX : Float :=  2
     let leftEyeCenter  : Vec2 := f.center + ![-eyeOffsetX, eyeOffsetY]
     let rightEyeCenter : Vec2 := f.center + ![ eyeOffsetX, eyeOffsetY]
-    let eyeLeft  : 𝕋 Mark := NewCircle 1 leftEyeCenter  eyeStyle
-    let eyeRight : 𝕋 Mark := NewCircle 1 rightEyeCenter eyeStyle
+    let eyeLeft  : 𝕋 Mark := new_circle 1 leftEyeCenter  eyeStyle
+    let eyeRight : 𝕋 Mark := new_circle 1 rightEyeCenter eyeStyle
     let eyes := eyeLeft + eyeRight
 
     -------------------------------------------------------
-    -- >>> sorriso (Quadratic Bézier)  <<<
+    -- >>> smile (Quadratic Bézier)  <<<
     -------------------------------------------------------
     let moveto : Vec2 := f.center + ![75,250]
     let qbezier : Vec2 × Vec2 := {fst := f.center + ![(f.center 0) + 150, 300 + f.smile], snd := moveto + ![225,0] }
-    let smile : 𝕋 Mark := NewQBezier moveto qbezier f.smilestyle
+    let smile : 𝕋 Mark := new_qbezier moveto qbezier f.smilestyle
     flat (head + eyes + smile)
 
 instance : Coe Face Mark where
@@ -136,19 +136,19 @@ def face₁ : 𝕋 Mark :=
   { center    := ![5, 5],
     size      := 0.0001,
     smile     := 100.,
-    eyestyle  := { fillColor := some (Color.mk 0.5 0.5 1) },
+    eyestyle  := { fill_color := some (Color.mk 0.5 0.5 1) },
     headstyle := {},
     smilestyle :=
-    { strokeColor := Color.mk 0 0 1,
-      fillColor := Color.mk 0 1 0,
-      strokeWidth := Sty.StyleSize.px 5}
+    { stroke_color := Color.mk 0 0 1,
+      fill_color := Color.mk 0 1 0,
+      stroke_width := Sty.StyleSize.px 5}
   : Face }
 
-#html draw ( (𝕋scale 1) * face₁) --(BoundingBox.toFrame (boundingBox𝕋 ( face₁)) )
+#html draw ( (𝕋scale 1) * face₁) --(BoundingBox.toFrame (bounding_box_𝕋 ( face₁)) )
 
 
-def rectEstilo : Style := { fillColor := some (Color.mk 0.5 0.5 0.5) }
-def rect₁ : 𝕋 Mark := NewPolygon #[![0,0],![2,0],![2,1],![0,1]] rectEstilo
+def rectEstilo : Style := { fill_color := some (Color.mk 0.5 0.5 0.5) }
+def rect₁ : 𝕋 Mark := new_polygon #[![0,0],![2,0],![2,1],![0,1]] rectEstilo
 def rectTransladada : 𝕋 Mark := 𝕋translate (![0, -1.5]) * rect₁
 
 def angles : Array Float :=
@@ -159,12 +159,12 @@ def rotatedArrow (a : Float) : 𝕋 Mark :=
     center := ![0, 0],
     sides  := 3,
     size   := a / 10,
-    style  := { fillColor := some (Color.mk 1 0 0) }
+    style  := { fill_color := some (Color.mk 1 0 0) }
   }
   let arr : Arrow := {
     pts       := (![1, 0], ![2, 0]),
     headsize  := a / 10,
-    headstyle := { fillColor := some (Color.mk 1 0 0) },
+    headstyle := { fill_color := some (Color.mk 1 0 0) },
     headmark  := Mark.mk headTri
   }
   𝕋rotate a * (arr : 𝕋 Mark)
@@ -177,11 +177,11 @@ def allArrows : 𝕋 Mark :=
     rotatedArrow 0
 
 def centerCircle : 𝕋 Mark :=
-  NewCircle 0.5 ![0, 0] { fillColor := some (Color.mk 0 0 1) }
+  new_circle 0.5 ![0, 0] { fill_color := some (Color.mk 0 0 1) }
 
 def greyRectangle : 𝕋 Mark :=
-  let rectStyle : Style := { fillColor := some (Color.mk 0.5 0.5 0.5) }
-  let rect : 𝕋 Mark := NewPolygon #[![-1,0],![1,0],![1,1],![-1,1]] rectStyle
+  let rectStyle : Style := { fill_color := some (Color.mk 0.5 0.5 0.5) }
+  let rect : 𝕋 Mark := new_polygon #[![-1,0],![1,0],![1,1],![-1,1]] rectStyle
   𝕋translate ![0, -1.5] * rect
 
 def finalDrawing : 𝕋 Mark :=
@@ -197,24 +197,24 @@ instance : MarkInterface Tree_ where
   θ t :=
     let height := t.h
 
-    let trunkStyle : Style := { fillColor := some (Color.mk 0.6 0.3 0.1) }
+    let trunkStyle : Style := { fill_color := some (Color.mk 0.6 0.3 0.1) }
     let trunk : 𝕋 Mark :=
-      NewPolygon #[
+      new_polygon #[
         ![-0.25, 0], ![ 0.25, 0],
         ![ 0.25, height/2], ![-0.25, height/2]
       ] trunkStyle
 
-    let leafStyle : Style := { fillColor := some (Color.mk 0   0.8 0) }
+    let leafStyle : Style := { fill_color := some (Color.mk 0   0.8 0) }
 
     let bigLeaf : 𝕋 Mark :=
-      NewCircle 0.5 ![0,0] leafStyle
+      new_circle 0.5 ![0,0] leafStyle
 
     let angles : Array Float :=
       (Array.range 10).map (fun i => i.toFloat * 0.7)
     let smallLeaves : Array (𝕋 Mark) :=
       angles.map fun θ =>
         𝕋translate (![Float.cos θ * 0.5, Float.sin θ * 0.5])
-        * (NewCircle 0.3 ![0,0] leafStyle : 𝕋 Mark)
+        * (new_circle 0.3 ![0,0] leafStyle : 𝕋 Mark)
 
     let leavesTotal : 𝕋 Mark :=
       smallLeaves.foldl (· + ·) bigLeaf
@@ -258,10 +258,10 @@ instance : MarkInterface Forest where
       treePrimsArr.foldl (· ++ ·) #[]
 
     let bg : 𝕋 Mark :=
-      NewPolygon #[
+      new_polygon #[
         ![-half, -half], ![ half, -half],
         ![ half,  half], ![-half,  half]
-      ] { fillColor := some (Color.mk 0.5 0.5 0.5)}
+      ] { fill_color := some (Color.mk 0.5 0.5 0.5)}
     let bgPrims := flat bg
 
     bgPrims ++ allTreePrims
@@ -269,4 +269,4 @@ instance : MarkInterface Forest where
 instance : Coe Forest Mark where
   coe f := Mark.mk f
 
-#html draw (Forest.mk 20) (BoundingBox.toFrame (boundingBox𝕋 (Forest.mk 20)))
+#html draw (Forest.mk 20) (BoundingBox.toFrame (bounding_box_𝕋 (Forest.mk 20)))

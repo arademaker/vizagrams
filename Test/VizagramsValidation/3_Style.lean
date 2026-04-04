@@ -5,10 +5,10 @@ open Sty ProofWidgets.Svg
 def defaultStyle : Style := default
 #eval defaultStyle
 
-def fillRed : Style := {fillColor := Color.mk 1 0 0}
+def fillRed : Style := {fill_color := Color.mk 1 0 0}
 #eval fillRed
 
-def fillAndStroke : Style := {strokeColor := Color.mk 0 0 1 , fillColor := Color.mk 0 1 0}
+def fillAndStroke : Style := {stroke_color := Color.mk 0 0 1 , fill_color := Color.mk 0 1 0}
 
 #eval (fillRed ++ fillAndStroke)
 #eval (fillAndStroke ++ fillRed )
@@ -29,11 +29,11 @@ def pxSize : StyleSize := .px 15
 def absSize : StyleSize := .abs 0.8
 #eval absSize
 
-#eval (toSvgSize pxSize testFrame)
-#eval (toSvgSize absSize testFrame)
+#eval (to_svg_size pxSize testFrame)
+#eval (to_svg_size absSize testFrame)
 
 def someSize : Option StyleSize := some (.px 25)
 def noSize : Option StyleSize := none
 
-#check (styleToSvgSize someSize testFrame)
-#check (styleToSvgSize noSize testFrame)
+#check (style_to_svg_size someSize testFrame)
+#check (style_to_svg_size noSize testFrame)

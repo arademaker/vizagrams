@@ -28,7 +28,7 @@ The free monad `𝕋 α` represents a tree of operations that can be:
 ## Algebra and Evaluation
 
 The free monad is "free" because it builds an abstract syntax tree of operations without
-immediately evaluating them. The algebra `algθ` interprets this tree into concrete primitives:
+immediately evaluating them. The algebra `alg_θ` interprets this tree into concrete primitives:
 
 ```
 𝕋 Mark → Array Prim
@@ -78,7 +78,7 @@ transformation in the categorical sense.
 
 **Usage:**
 ```lean
-let redRotated : ℍ := ℍ.mk {fillColor := Color.mk 1 0 0} (rotate (π/4))
+let redRotated : ℍ := ℍ.mk {fill_color := Color.mk 1 0 0} (rotate (π/4))
 let transformed := redRotated * myMark
 ```
 -/
@@ -119,7 +119,7 @@ The free monad `𝕋 α` builds an abstract syntax tree of graphical operations:
 - Universe polymorphic: works across different type universes
 
 **Evaluation:**
-The tree is interpreted into concrete primitives via the algebra `algθ : 𝕋 Mark → Array Prim`.
+The tree is interpreted into concrete primitives via the algebra `alg_θ : 𝕋 Mark → Array Prim`.
 -/
 inductive 𝕋 (α : Type u) where
   | pure : α → 𝕋 α
@@ -166,23 +166,23 @@ def μ : 𝕋 (𝕋 α) → 𝕋 α
 Monadic bind for the free monad: composes `ma : 𝕋 α` with `f : α → 𝕋 β`.
 Defined as `μ ∘ map f`.
 -/
-def freebind : (𝕋 α) → (α → 𝕋 β) → (𝕋 β) :=
+def free_bind : (𝕋 α) → (α → 𝕋 β) → (𝕋 β) :=
   fun ma f => (μ ∘ (𝕋.map f)) ma
 
-/-- `𝕋` is a monad with `η` as unit and `freebind` as bind. -/
+/-- `𝕋` is a monad with `η` as unit and `free_bind` as bind. -/
 instance : Monad 𝕋 where
   pure := η
-  bind := freebind
+  bind := free_bind
 
 /--
 Apply a graphical transformation `ℍ` to an array of primitives.
 First applies the geometric transformation `h.g`, then the style `h.s`.
 -/
-def applyH (h : ℍ) (prims : Array Prim) : Array Prim :=
+def apply_h (h : ℍ) (prims : Array Prim) : Array Prim :=
   prims.map (fun p => h.s * (h.g * p))
 
 /--
-**algθ (Algebra Theta)**: The evaluation algebra for the free monad.
+**alg_θ (Algebra Theta)**: The evaluation algebra for the free monad.
 
 Interprets a tree of primitive arrays into a single array of primitives:
 - `pure x`: Return the array as-is
@@ -191,23 +191,23 @@ Interprets a tree of primitive arrays into a single array of primitives:
 
 This is a catamorphism (fold) over the tree structure.
 -/
-def algθ : 𝕋 (Array Prim) → Array Prim
+def alg_θ : 𝕋 (Array Prim) → Array Prim
   | 𝕋.pure x => x
-  | 𝕋.comp x y => (algθ x) ⊕ (algθ y)
-  | 𝕋.act h x => applyH h (algθ x)
+  | 𝕋.comp x y => (alg_θ x) ⊕ (alg_θ y)
+  | 𝕋.act h x => apply_h h (alg_θ x)
 
 /--
 **flat**: Evaluates a tree of marks into an array of primitives.
 
 This is the main evaluation function that:
 1. Maps `Mark.θ` over the tree to get `𝕋 (Array Prim)`
-2. Evaluates the tree using the algebra `algθ` to get `Array Prim`
+2. Evaluates the tree using the algebra `alg_θ` to get `Array Prim`
 
 **Type signature:** `𝕋 Mark → Array Prim`
 
 This flattens the compositional structure into drawable primitives.
 -/
-def flat (t : 𝕋 Mark) : Array Prim := algθ ((𝕋.map Mark.θ) t)
+def flat (t : 𝕋 Mark) : Array Prim := alg_θ ((𝕋.map Mark.θ) t)
 
 /-!
 ### Operator Instances

@@ -1,11 +1,11 @@
 import Lake
 open Lake DSL
 
--- Adiciona Mathlib como dependência via git
+-- Add Mathlib as a git dependency
 require mathlib from git
   "https://github.com/leanprover-community/mathlib4" @ "master"
 
--- Configura o pacote principal
+-- Configure the main package
 package "vizagrams" where
   -- add package configuration options here
 

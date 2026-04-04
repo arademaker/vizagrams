@@ -1,6 +1,6 @@
 /- # header
 -/
-import Vizagrams.LeannearAlgebra
+import Vizagrams.LinearAlgebra
 /-! # Doc
 -/
 
@@ -22,7 +22,7 @@ def v₂ : Vec2 := ![2.0, 6.0]
 #eval e₁ + e₂
 #eval normalize v₁
 #eval ‖ (normalize v₁) ‖
-#eval normalize nullVec2
+#eval normalize null_vec2
 #eval normalize (1/2 * e₁)
 
 def A₁ : Mat2 := !![2.0 ,6.0 ;7.0 ,3.0]

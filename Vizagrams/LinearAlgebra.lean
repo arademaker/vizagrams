@@ -9,7 +9,6 @@ import Mathlib.Data.Matrix.Notation
 import Mathlib.Analysis.Normed.Group.Basic
 import Mathlib.LinearAlgebra.AffineSpace.AffineMap
 import Mathlib.Data.Matrix.Basic
-import Mathlib.Data.Matrix.Notation
 
 /-!
 # Linear Algebra Foundations for Vizagrams
@@ -69,7 +68,7 @@ def e₁ : Vec2 := ![1, 0]
 def e₂ : Vec2 := ![0, 1]
 
 /-- Zero vector (0, 0). -/
-def nullVec2 : Vec2 := ![0.0, 0.0]
+def null_vec2 : Vec2 := ![0.0, 0.0]
 
 /-!
 ### Inner Product and Norms
@@ -89,16 +88,16 @@ instance : Inner Float Vec2 where
 notation "⟪" x "," y "⟫" => inner Float x y
 
 /-- Squared Euclidean norm (avoids square root for efficiency). -/
-def normSquare (v : Vec2) : Float := ⟪v, v⟫
+def norm_square (v : Vec2) : Float := ⟪v, v⟫
 
 /-- Notation for squared norm. -/
-notation:max "‖" v:max "‖²" => normSquare v
+notation:max "‖" v:max "‖²" => norm_square v
 
 /-- Euclidean norm (length of vector). -/
-def vecNorm (v : Vec2) : Float := Float.sqrt ⟪v, v⟫
+def vec_norm (v : Vec2) : Float := Float.sqrt ⟪v, v⟫
 
 /-- Standard notation for norm. -/
-notation:max "‖" v:max "‖" => vecNorm v
+notation:max "‖" v:max "‖" => vec_norm v
 
 /-!
 ### Vector Operations
@@ -111,22 +110,22 @@ Normalize a vector to unit length.
 Returns the original vector if it's the zero vector to avoid division by zero.
 -/
 def normalize (v : Vec2) : Vec2 :=
-  let n := vecNorm v
+  let n := vec_norm v
   if n == 0 then v else fun i => v i / n
 
 /-- Euclidean distance between two points. -/
-def distance (v₁ v₂ : Vec2) : Float := vecNorm (v₁ - v₂)
+def distance (v₁ v₂ : Vec2) : Float := vec_norm (v₁ - v₂)
 
 /-- Convenient notation for distance. -/
 notation "d(" x "," y ")" => distance x y
 
 /-- Angle between two vectors (in radians). -/
-def angleBetween (v₁ v₂ : Vec2) : Float :=
-  Float.acos (⟪v₁, v₂⟫ / (vecNorm v₁ * vecNorm v₂))
+def angle_between (v₁ v₂ : Vec2) : Float :=
+  Float.acos (⟪v₁, v₂⟫ / (vec_norm v₁ * vec_norm v₂))
 
 /-- Orthogonal projection of v₁ onto v₂. -/
 def projection (v₁ v₂ : Vec2) : Vec2 :=
-  (⟪v₁, v₂⟫ / normSquare v₂) • v₂
+  (⟪v₁, v₂⟫ / norm_square v₂) • v₂
 
 /-- 90-degree counterclockwise rotation: (x, y) ↦ (-y, x). -/
 def perpendicular (v : Vec2) : Vec2 := ![-v 1, v 0]
@@ -148,18 +147,18 @@ instance : One Mat2 where
 Matrix multiplication.
 Uses custom notation to distinguish from other operations.
 -/
-def matMul (A B : Mat2) : Mat2 :=
+def mat_mul (A B : Mat2) : Mat2 :=
   fun i j => A i 0 * B 0 j + A i 1 * B 1 j
 
 /-- Custom infix notation for matrix multiplication. -/
-infixl:70 "∘ₘ" => matMul
+infixl:70 "∘ₘ" => mat_mul
 
 /-- Matrix-vector multiplication. -/
-def mulVec (A : Mat2) (v : Vec2) : Vec2 :=
+def mul_vec (A : Mat2) (v : Vec2) : Vec2 :=
   fun i => (A i 0) * v 0 + (A i 1) * v 1
 
 /-- Infix notation for matrix-vector multiplication. -/
-infixl:65 "@" => mulVec
+infixl:65 "@" => mul_vec
 
 /-!
 ### Affine Transformations
@@ -194,7 +193,7 @@ instance : Coe Vec2 Mat2Vec2 where
 
 /-- Treat linear transformation as affine transformation (no translation). -/
 instance : Coe Mat2 Mat2Vec2 where
-  coe M := { A := M, b := nullVec2 }
+  coe M := { A := M, b := null_vec2 }
 
 /-!
 ### Affine Map Operations
@@ -203,10 +202,10 @@ Direct operations for Mat2Vec2 transformations, providing the categorical struct
 -/
 
 /-- Identity transformation (categorical identity morphism). -/
-def identity : Mat2Vec2 := { A := 1, b := nullVec2 }
+def identity : Mat2Vec2 := { A := 1, b := null_vec2 }
 
 /-- Apply affine transformation to a point. -/
-def apply (f : Mat2Vec2) (x : Vec2) : Vec2 := mulVec f.A x + f.b
+def apply (f : Mat2Vec2) (x : Vec2) : Vec2 := mul_vec f.A x + f.b
 
 /-- Compose two affine transformations following categorical law: (f ∘ g)(x) = f(g(x)).
     This satisfies:
@@ -239,19 +238,19 @@ def translate (t : Vec2) : Mat2Vec2 :=
 
 /-- Uniform scaling by factor s. -/
 def scale (s : Float) : Mat2Vec2 :=
-  { A := !![s, 0.0; 0.0, s], b := nullVec2 }
+  { A := !![s, 0.0; 0.0, s], b := null_vec2 }
 
 /-- Rotation by angle θ (in radians, counterclockwise). -/
 def rotate (θ : Float) : Mat2Vec2 :=
   let c := Float.cos θ
   let s := Float.sin θ
-  { A := !![c, -s; s, c], b := nullVec2 }
+  { A := !![c, -s; s, c], b := null_vec2 }
 
 /-- Reflection across line making angle θ with x-axis. -/
 def reflect (θ : Float) : Mat2Vec2 :=
   let c := Float.cos (2 * θ)
   let s := Float.sin (2 * θ)
-  { A := !![c, s; s, -c], b := nullVec2 }
+  { A := !![c, s; s, -c], b := null_vec2 }
 
 /-!
 ### Convenience Functions
@@ -260,25 +259,25 @@ Higher-level operations built on the transformation primitives.
 -/
 
 /-- Apply rotation transformation to a vector. -/
-def rotateVec2 (v : Vec2) (θ : Float) : Vec2 :=
+def rotate_vec2 (v : Vec2) (θ : Float) : Vec2 :=
   apply (rotate θ) v
 
 /-- Point on ellipse with given angle and radii. -/
-def pointOnEllipse (θ rx ry : Float) : Vec2 :=
+def point_on_ellipse (θ rx ry : Float) : Vec2 :=
   ![rx * Float.cos θ, ry * Float.sin θ]
 
 /-- Angle of vector from positive x-axis (atan2 function). -/
-def atan2pi (v : Vec2) : Float :=
+def atan2_pi (v : Vec2) : Float :=
   Float.atan2 (v 1) (v 0)
 
 /-- Create transformation matrix for general 2D rotation around origin. -/
-def rotationMatrix (θ : Float) : Mat2 :=
+def rotation_matrix (θ : Float) : Mat2 :=
   let c := Float.cos θ
   let s := Float.sin θ
   !![c, -s; s, c]
 
 /-- Create transformation matrix for scaling. -/
-def scalingMatrix (sx sy : Float) : Mat2 :=
+def scaling_matrix (sx sy : Float) : Mat2 :=
   !![sx, 0; 0, sy]
 
 /-!
@@ -288,16 +287,16 @@ Functions for working with different coordinate systems and transformations.
 -/
 
 /-- Convert from polar coordinates (r, θ) to Cartesian. -/
-def fromPolar (r θ : Float) : Vec2 :=
+def from_polar (r θ : Float) : Vec2 :=
   ![r * Float.cos θ, r * Float.sin θ]
 
 /-- Convert from Cartesian to polar coordinates. -/
-def toPolar (v : Vec2) : Float × Float :=
-  (vecNorm v, atan2pi v)
+def to_polar (v : Vec2) : Float × Float :=
+  (vec_norm v, atan2_pi v)
 
 /-- Transform that maps unit square [0,1]² to given rectangle. -/
-def rectTransform (corner : Vec2) (width height : Float) : Mat2Vec2 :=
-  let scaling := { A := !![width, 0; 0, height], b := nullVec2 }
+def rect_transform (corner : Vec2) (width height : Float) : Mat2Vec2 :=
+  let scaling := { A := !![width, 0; 0, height], b := null_vec2 }
   let translation := translate corner
   translation ∘ₜ scaling
 
@@ -308,19 +307,19 @@ Functions for geometric reasoning and validation.
 -/
 
 /-- Check if two vectors are approximately equal (within floating point tolerance). -/
-def approxEqual (v₁ v₂ : Vec2) (ε : Float := 1e-10) : Bool :=
-  vecNorm (v₁ - v₂) < ε
+def approx_equal (v₁ v₂ : Vec2) (ε : Float := 1e-10) : Bool :=
+  vec_norm (v₁ - v₂) < ε
 
 /-- Check if vector is approximately zero. -/
-def isZero (v : Vec2) (ε : Float := 1e-10) : Bool :=
-  vecNorm v < ε
+def is_zero (v : Vec2) (ε : Float := 1e-10) : Bool :=
+  vec_norm v < ε
 
 /-- Check if two vectors are approximately orthogonal. -/
-def isOrthogonal (v₁ v₂ : Vec2) (ε : Float := 1e-10) : Bool :=
+def is_orthogonal (v₁ v₂ : Vec2) (ε : Float := 1e-10) : Bool :=
   Float.abs ⟪v₁, v₂⟫ < ε
 
 /-- Check if transformation preserves orientation (determinant > 0). -/
-def preservesOrientation (t : Mat2Vec2) : Bool :=
+def preserves_orientation (t : Mat2Vec2) : Bool :=
   let det := t.A 0 0 * t.A 1 1 - t.A 0 1 * t.A 1 0
   det > 0
 

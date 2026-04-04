@@ -13,7 +13,7 @@ def data₁ : List Float :=  [1.0, 2.3, 0.7, 3.1, 0.3]
 def barPolygon (h : Float) (w : Float := 0.8) : Prim :=
   let pts : Array Vec2 :=
     #[![0, 0], ![w, 0], ![w, h], ![0, h]]
-  NewPolygon pts {fillColor := Color.mk (3*h/2) (2*h/3) (h/5) }
+  new_polygon pts {fill_color := Color.mk (3*h/2) (2*h/3) (h/5) }
 
 def coalgbar (τ : List Float) : List ( List Float ) :=
   τ.map (fun x => [x])

@@ -6,7 +6,7 @@ open Sty ProofWidgets.Svg
 open GraphicalPrimitive
 
 def g₁ : Geom := .circle 1 ![0,0]
-def s₁ : Style := {fillColor := Color.mk 0 1 0}
+def s₁ : Style := {fill_color := Color.mk 0 1 0}
 
 def p₁ : Prim := {geom := g₁ , style := s₁ }
 
@@ -19,7 +19,7 @@ def f : Mat2Vec2 := {A := !![2 , 0 ; 0 , 2] , b := ![1 ,0]}
 
 #eval f * p₁
 
-def p₂ : Prim := line ![0 , 0] ![1 , 1]
+def p₂ : Prim := Prim.line ![0 , 0] ![1 , 1]
 
 #eval p₁ ⊕ p₂
 #check (p₁ ⊕ p₂)

@@ -14,7 +14,7 @@ def data₁ : List Float :=  [1.0, 2.3, 0.7, 3.1, 0.3]
 def barPolygon (h : Float) (w : Float := 0.8) : Prim :=
   let pts : Array Vec2 :=
     #[![0, 0], ![w, 0], ![w, h], ![0, h]]
-  NewPolygon pts {fillColor := Color.mk (3*h/2) (2*h/3) (h/5) }
+  new_polygon pts {fill_color := Color.mk (3*h/2) (2*h/3) (h/5) }
 
 def coalgbar (τ : List Float) : List ( List Float ) :=
   τ.map (fun x => [x])
@@ -62,10 +62,10 @@ def createSvgFromData (data : List Float) : String :=
     let strokeG := ((g / 2) : Nat)
     let strokeB := ((b / 2) : Nat)
 
-    let fillColor   := s!"rgb({r},{g},{b})"
-    let strokeColor := s!"rgb({strokeR},{strokeG},{strokeB})"
+    let fill_color   := s!"rgb({r},{g},{b})"
+    let stroke_color := s!"rgb({strokeR},{strokeG},{strokeB})"
 
-    let barSvg := s!"<rect x=\"{x}\" y=\"{y}\" width=\"40\" height=\"{height}\" fill=\"{fillColor}\" stroke=\"{strokeColor}\"/>"
+    let barSvg := s!"<rect x=\"{x}\" y=\"{y}\" width=\"40\" height=\"{height}\" fill=\"{fill_color}\" stroke=\"{stroke_color}\"/>"
     -- let label  := s!"<text x=\"{x + 20}\" y=\"270\" text-anchor=\"middle\" font-size=\"12\">{h}</text>"
 
     acc ++ barSvg ++ "\n" --++ label ++ "\n"

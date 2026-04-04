@@ -9,46 +9,55 @@ open GraphicalMark
 open FreeMonad
 
 
-/-
-# Seja 𝓒 uma categoria e 𝓕 : 𝓒 → 𝓒 um endofuntor
-*Uma F-Álgebra é uma tupla (A,g) onde:*
-A ∈ 𝓒         (Carrier)
-g : A → 𝓕 A   (Structure Map)
+/-!
+# Graphic Expressions — Hylomorphism Pattern
 
-*Uma F-Coálgebra é uma tupla (U, h) onde:*
-U ∈ 𝓒
-h : 𝓕 A → A
+This module defines `GraphicExpression`, a data-driven visualization abstraction based on
+the categorical **hylomorphism** pattern.
 
-# hylomorphism
-hylo : (A, alg) × (B, coalg) × B → A
+## Categorical Background
 
-hylo(alg, coalg) = alg ◦ F hylo ◦ coalg.
+Let 𝓒 be a category and 𝓕 : 𝓒 → 𝓒 an endofunctor.
 
-# Graphic Expression
-Def:(Prática)
-Uma Graphic Expression é uma tripla (expr, alg, coalg) onde
-expr : D → 𝕋 Mark
-alg : List (𝕋 Mark) → 𝕋 Mark
-coalg : D → List D
+- An **F-algebra** is a pair `(A, g)` where `A ∈ 𝓒` (carrier) and `g : 𝓕 A → A` (structure map).
+- An **F-coalgebra** is a pair `(U, h)` where `h : U → 𝓕 U`.
+- A **hylomorphism** fuses a coalgebra (anamorphism, "unfold") with an algebra (catamorphism, "fold"):
+  ```
+  hylo(alg, coalg) = alg ∘ F(hylo) ∘ coalg
+  ```
 
-  coalg
-    ⅀   expr = alg ◦ fmap(expr) ◦ coalg
-   alg
+## Graphic Expression
 
-Def:(Teórica)
-Uma Graphic Expression é uma tripla (expr, alg, coalg) e um Funtor 𝓕 onde
-expr : D → 𝕋 Mark
-alg : 𝓕 (𝕋 Mark) → 𝕋 Mark
-coalg : D → 𝓕 D
+A `GraphicExpression` specialises the hylomorphism pattern to visualization.
+It is a triple `(expr, alg, coalg)` over a data type `D` where the functor is `List`:
 
+```
+expr   : D → 𝕋 Mark          -- render a single datum
+alg    : List (𝕋 Mark) → 𝕋 Mark  -- combine rendered children
+coalg  : D → List D           -- decompose a datum into sub-data
+```
+
+Evaluation is then:
+```
+eval = alg ∘ map expr ∘ coalg
+```
 -/
-structure GraphicExpression (α : Type ) where
-  expr : α → (𝕋 Mark)
-  alg  : List (𝕋 Mark) → (𝕋 Mark)
+
+/--
+A data-driven graphic: packages a single-datum renderer (`expr`), a combining algebra
+(`alg`), and a decomposition coalgebra (`coalg`) into a reusable visualization pattern.
+-/
+structure GraphicExpression (α : Type) where
+  expr  : α → 𝕋 Mark
+  alg   : List (𝕋 Mark) → 𝕋 Mark
   coalg : α → List α
 
-def GraphicExpression.eval {α : Type} (ge : GraphicExpression α ) : α →  𝕋 Mark :=
- ge.alg ∘ ( List.map ge.expr ) ∘ ge.coalg
+/--
+Evaluate a `GraphicExpression` on input `a`: decompose with `coalg`, render each piece
+with `expr`, then combine with `alg`.
+-/
+def GraphicExpression.eval {α : Type} (ge : GraphicExpression α) : α → 𝕋 Mark :=
+  ge.alg ∘ (List.map ge.expr) ∘ ge.coalg
 
 /-
 def table : Matrix (Fin 4) (Fin 3) Float := !![ 0, 1.2, 2.1
@@ -62,7 +71,7 @@ def Expr₁ (τ : Matrix (Fin 1) (Fin 3) Float) : 𝕋 Mark :=
   let color :=
     if ( τ 0 0 ) <= 0.5 then ( Color.mk 1 0 0 ) else ( Color.mk 1 0.5 0.9)
   let center : Vec2 := ![ τ 0 1 , τ 0 2 ]
-  let Circle : 𝕋 Mark := 𝕋Circle 0.5 center {fillColor := color}
+  let Circle : 𝕋 Mark := 𝕋Circle 0.5 center {fill_color := color}
   Circle
 
 def coalg₁ (τ : Matrix (Fin 4) (Fin 3) Float) : List (Matrix (Fin 1) (Fin 3) Float) :=
@@ -87,7 +96,7 @@ def coalgbar (τ : List Float) : List ( List Float ) :=
 def barPolygon (h : Float) (w : Float := 0.8) : Prim :=
   let pts : Array Vec2 :=
     #[![0, 0], ![w, 0], ![w, h], ![0, h]]
-  NewPolygon pts {fillColor := Color.mk (3*h/2) (2*h/3) (h/5) }
+  NewPolygon pts {fill_color := Color.mk (3*h/2) (2*h/3) (h/5) }
 
 def barExpr : List Float → 𝕋 Mark
   | [h] => 𝕋.pure (barPolygon h)

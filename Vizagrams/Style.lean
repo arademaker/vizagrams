@@ -37,9 +37,9 @@ Each attribute is an `Option`, where `none` signifies that the attribute is unse
 and should be inherited from a parent style.
 -/
 structure Style where
-  strokeColor := (none : Option Color)
-  strokeWidth := (none : Option StyleSize)
-  fillColor   := (none : Option Color)
+  stroke_color := (none : Option Color)
+  stroke_width := (none : Option StyleSize)
+  fill_color   := (none : Option Color)
 deriving Repr, Inhabited
 
 /--
@@ -48,19 +48,19 @@ from the left-hand style (`s1`). This allows for chaining `style1 ++ style2 ++ .
 -/
 instance : Append Style where
   append s1 s2 := {
-    strokeColor := s2.strokeColor.orElse fun () => s1.strokeColor
-    strokeWidth := s2.strokeWidth.orElse fun () => s1.strokeWidth
-    fillColor := s2.fillColor.orElse fun () => s1.fillColor
+    stroke_color := s2.stroke_color.orElse fun () => s1.stroke_color
+    stroke_width := s2.stroke_width.orElse fun () => s1.stroke_width
+    fill_color := s2.fill_color.orElse fun () => s1.fill_color
   }
 
 /-- Converts a `StyleSize` to a `ProofWidgets.Svg.Size` within a given frame. -/
-def toSvgSize (s : StyleSize) (fr : Frame) : Size fr :=
+def to_svg_size (s : StyleSize) (fr : Frame) : Size fr :=
   match s with
   | .px x  => .px x
   | .abs x => .abs x
 
-/-- Lifts the `toSvgSize` conversion to operate on `Option StyleSize`. -/
-def styleToSvgSize (s : Option StyleSize) (fr : Frame) : Option (Size fr) :=
-  s.map (toSvgSize · fr)
+/-- Lifts the `to_svg_size` conversion to operate on `Option StyleSize`. -/
+def style_to_svg_size (s : Option StyleSize) (fr : Frame) : Option (Size fr) :=
+  s.map (to_svg_size · fr)
 
 end Sty

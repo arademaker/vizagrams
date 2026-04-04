@@ -29,22 +29,22 @@ def makeSquare (row col : Nat) : 𝕋 Mark :=
   let color := if isLight then lightSquareColor else darkSquareColor
   let x := col.toFloat * squareSize
   let y := row.toFloat * squareSize
-  let square := NewPolygon #[![0,0], ![0,squareSize], ![squareSize,squareSize], ![squareSize,0]]
-    { fillColor := color
-    , strokeColor := Color.mk 0.5 0.5 0.5
-    , strokeWidth := StyleSize.px 1 }
+  let square := new_polygon #[![0,0], ![0,squareSize], ![squareSize,squareSize], ![squareSize,0]]
+    { fill_color := color
+    , stroke_color := Color.mk 0.5 0.5 0.5
+    , stroke_width := StyleSize.px 1 }
   (translate ![x, y] : ℍ) * (square : 𝕋 Mark)
 
 def makeRow (row : Nat) : 𝕋 Mark :=
   let squares := List.range 8 |> List.map (makeSquare row)
   match squares with
-  | [] => (NewCircle 0 ![0,0] : 𝕋 Mark)
+  | [] => (new_circle 0 ![0,0] : 𝕋 Mark)
   | head :: tail => tail.foldl (· + ·) head
 
 def board8x8 : 𝕋 Mark :=
   let rows := List.range 8 |> List.map makeRow
   match rows with
-  | [] => (NewCircle 0 ![0,0] : 𝕋 Mark)
+  | [] => (new_circle 0 ![0,0] : 𝕋 Mark)
   | head :: tail => tail.foldl (· + ·) head
 
 def columnLabels : 𝕋 Mark :=
@@ -53,12 +53,12 @@ def columnLabels : 𝕋 Mark :=
   let labelMarks := labels.zipIdx.map (fun (c, i) =>
     let xPos := i.toFloat * squareSize + squareSize / 2
     let style : ℍ := ℍ.mk
-      { fillColor := labelColor }
+      { fill_color := labelColor }
       (translate ![xPos, yPos])
-    style * (NewText c.toString ![0,0] 0.3 {fillColor := labelColor} : 𝕋 Mark)
+    style * (new_text c.toString ![0,0] 0.3 {fill_color := labelColor} : 𝕋 Mark)
   )
   match labelMarks with
-  | [] => (NewCircle 0 ![0,0] : 𝕋 Mark)
+  | [] => (new_circle 0 ![0,0] : 𝕋 Mark)
   | head :: tail => tail.foldl (· + ·) head
 
 def rowLabels : 𝕋 Mark :=
@@ -67,18 +67,18 @@ def rowLabels : 𝕋 Mark :=
   let labelMarks := labels.zipIdx.map (fun (num, i) =>
     let yPos := i.toFloat * squareSize + squareSize / 2
     let style : ℍ := ℍ.mk
-      { fillColor := labelColor }
+      { fill_color := labelColor }
       (translate ![xPos, yPos])
-    style * (NewText (toString num) ![0,0] 0.3 {fillColor := labelColor} : 𝕋 Mark)
+    style * (new_text (toString num) ![0,0] 0.3 {fill_color := labelColor} : 𝕋 Mark)
   )
   match labelMarks with
-  | [] => (NewCircle 0 ![0,0] : 𝕋 Mark)
+  | [] => (new_circle 0 ![0,0] : 𝕋 Mark)
   | head :: tail => tail.foldl (· + ·) head
 
 def boardBorder : 𝕋 Mark :=
   let borderSize := 8.0 * squareSize
   let borderPoly := {geom := .polyline #[![0,0], ![0,borderSize], ![borderSize,borderSize], ![borderSize,0], ![0,0]],
-                     style := {strokeColor := Color.mk 0.1 0.1 0.1, strokeWidth := StyleSize.px 3}}
+                     style := {stroke_color := Color.mk 0.1 0.1 0.1, stroke_width := StyleSize.px 3}}
   (borderPoly : Prim)
 
 def chessBoard : 𝕋 Mark :=
@@ -118,78 +118,78 @@ def pieceScale : Float := 0.5
 
 def pawnShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
-  let base := NewPolygon #[![-0.25, -0.4], ![0.25, -0.4], ![0.2, -0.2], ![-0.2, -0.2]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let body := (translate ![0, 0.1] : ℍ) * (NewCircle 0.22 ![0, 0]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
+  let base := new_polygon #[![-0.25, -0.4], ![0.25, -0.4], ![0.2, -0.2], ![-0.2, -0.2]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let body := (translate ![0, 0.1] : ℍ) * (new_circle 0.22 ![0, 0]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 } : 𝕋 Mark)
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + body)
 
 def rookShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
-  let base := NewPolygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.28, -0.3], ![-0.28, -0.3]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let body := NewPolygon #[![-0.28, -0.3], ![0.28, -0.3], ![0.32, 0.3], ![-0.32, 0.3]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let cren1 := NewPolygon #[![-0.32, 0.3], ![-0.15, 0.3], ![-0.15, 0.5], ![-0.32, 0.5]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let cren2 := NewPolygon #[![-0.08, 0.3], ![0.08, 0.3], ![0.08, 0.5], ![-0.08, 0.5]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let cren3 := NewPolygon #[![0.15, 0.3], ![0.32, 0.3], ![0.32, 0.5], ![0.15, 0.5]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.28, -0.3], ![-0.28, -0.3]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let body := new_polygon #[![-0.28, -0.3], ![0.28, -0.3], ![0.32, 0.3], ![-0.32, 0.3]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let cren1 := new_polygon #[![-0.32, 0.3], ![-0.15, 0.3], ![-0.15, 0.5], ![-0.32, 0.5]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let cren2 := new_polygon #[![-0.08, 0.3], ![0.08, 0.3], ![0.08, 0.5], ![-0.08, 0.5]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let cren3 := new_polygon #[![0.15, 0.3], ![0.32, 0.3], ![0.32, 0.5], ![0.15, 0.5]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (cren1 : 𝕋 Mark) + (cren2 : 𝕋 Mark) + (cren3 : 𝕋 Mark))
 
 def knightShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
-  let base := NewPolygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let head := NewPolygon #[![-0.2, -0.3], ![-0.1, 0.2], ![0, 0.5], ![0.25, 0.4], ![0.3, 0.1], ![0.2, -0.1], ![0.1, -0.3]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let eye := (translate ![0.15, 0.2] : ℍ) * (NewCircle 0.05 ![0, 0]
-    { fillColor := pieceOutlineColor, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 1 } : 𝕋 Mark)
+  let base := new_polygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let head := new_polygon #[![-0.2, -0.3], ![-0.1, 0.2], ![0, 0.5], ![0.25, 0.4], ![0.3, 0.1], ![0.2, -0.1], ![0.1, -0.3]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let eye := (translate ![0.15, 0.2] : ℍ) * (new_circle 0.05 ![0, 0]
+    { fill_color := pieceOutlineColor, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 1 } : 𝕋 Mark)
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (head : 𝕋 Mark) + eye)
 
 def bishopShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
-  let base := NewPolygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let body := NewPolygon #[![-0.2, -0.3], ![0.2, -0.3], ![0.15, 0.2], ![-0.15, 0.2]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let head := NewPolygon #[![-0.15, 0.2], ![0.15, 0.2], ![0, 0.55]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let ball := (translate ![0, 0.65] : ℍ) * (NewCircle 0.08 ![0, 0]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
+  let base := new_polygon #[![-0.25, -0.5], ![0.25, -0.5], ![0.2, -0.3], ![-0.2, -0.3]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let body := new_polygon #[![-0.2, -0.3], ![0.2, -0.3], ![0.15, 0.2], ![-0.15, 0.2]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let head := new_polygon #[![-0.15, 0.2], ![0.15, 0.2], ![0, 0.55]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let ball := (translate ![0, 0.65] : ℍ) * (new_circle 0.08 ![0, 0]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 } : 𝕋 Mark)
   let slit := {geom := .polyline #[![-0.08, 0.05], ![0.08, 0.15]],
-               style := {strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2}}
+               style := {stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2}}
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (head : 𝕋 Mark) + ball + ((slit : Prim) : 𝕋 Mark))
 
 def queenShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
-  let base := NewPolygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let body := NewPolygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.1], ![-0.3, 0.1]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let crown := NewPolygon #[![-0.3, 0.1], ![-0.25, 0.4], ![-0.15, 0.2], ![0, 0.5], ![0.15, 0.2], ![0.25, 0.4], ![0.3, 0.1]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let ball1 := (translate ![-0.25, 0.45] : ℍ) * (NewCircle 0.06 ![0, 0]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
-  let ball2 := (translate ![0, 0.55] : ℍ) * (NewCircle 0.06 ![0, 0]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
-  let ball3 := (translate ![0.25, 0.45] : ℍ) * (NewCircle 0.06 ![0, 0]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 } : 𝕋 Mark)
+  let base := new_polygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let body := new_polygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.1], ![-0.3, 0.1]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let crown := new_polygon #[![-0.3, 0.1], ![-0.25, 0.4], ![-0.15, 0.2], ![0, 0.5], ![0.15, 0.2], ![0.25, 0.4], ![0.3, 0.1]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let ball1 := (translate ![-0.25, 0.45] : ℍ) * (new_circle 0.06 ![0, 0]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 } : 𝕋 Mark)
+  let ball2 := (translate ![0, 0.55] : ℍ) * (new_circle 0.06 ![0, 0]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 } : 𝕋 Mark)
+  let ball3 := (translate ![0.25, 0.45] : ℍ) * (new_circle 0.06 ![0, 0]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 } : 𝕋 Mark)
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (crown : 𝕋 Mark) + ball1 + ball2 + ball3)
 
 def kingShape (c : PieceColor) : 𝕋 Mark :=
   let color := getPieceColor c
-  let base := NewPolygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let body := NewPolygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.15], ![-0.3, 0.15]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let crownBase := NewPolygon #[![-0.3, 0.15], ![0.3, 0.15], ![0.25, 0.35], ![-0.25, 0.35]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let crossV := NewPolygon #[![-0.05, 0.35], ![0.05, 0.35], ![0.05, 0.65], ![-0.05, 0.65]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
-  let crossH := NewPolygon #[![-0.15, 0.45], ![0.15, 0.45], ![0.15, 0.55], ![-0.15, 0.55]]
-    { fillColor := color, strokeColor := pieceOutlineColor, strokeWidth := StyleSize.px 2 }
+  let base := new_polygon #[![-0.3, -0.5], ![0.3, -0.5], ![0.25, -0.3], ![-0.25, -0.3]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let body := new_polygon #[![-0.25, -0.3], ![0.25, -0.3], ![0.3, 0.15], ![-0.3, 0.15]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let crownBase := new_polygon #[![-0.3, 0.15], ![0.3, 0.15], ![0.25, 0.35], ![-0.25, 0.35]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let crossV := new_polygon #[![-0.05, 0.35], ![0.05, 0.35], ![0.05, 0.65], ![-0.05, 0.65]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
+  let crossH := new_polygon #[![-0.15, 0.45], ![0.15, 0.45], ![0.15, 0.55], ![-0.15, 0.55]]
+    { fill_color := color, stroke_color := pieceOutlineColor, stroke_width := StyleSize.px 2 }
   (scale pieceScale : ℍ) * ((base : 𝕋 Mark) + (body : 𝕋 Mark) + (crownBase : 𝕋 Mark) + (crossV : 𝕋 Mark) + (crossH : 𝕋 Mark))
 
 def renderPiece (piece : Piece) : 𝕋 Mark :=
@@ -270,7 +270,7 @@ def renderPosition (pos : Position) : 𝕋 Mark :=
     | none => none
     | some piece => some (placePieceAt piece square.row square.col)
   match pieces with
-  | [] => (NewCircle 0 ![0, 0] : 𝕋 Mark)
+  | [] => (new_circle 0 ![0, 0] : 𝕋 Mark)
   | head :: tail => tail.foldl (· + ·) head
 
 def renderGame (pos : Position) : 𝕋 Mark :=

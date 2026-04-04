@@ -49,14 +49,11 @@ Following the categorical theory from "Data Visualization from a Category Theory
 - Composition forms a monoid structure
 - Transformations preserve the categorical structure
 -/
+namespace GraphicalMark
+
 open LinearAlgebra
 open GeometricPrimitive
 open GraphicalPrimitive
-
--- Enable auto implicit for ergonomic type inference
-set_option autoImplicit true
-
-namespace GraphicalMark
 
 -- Explicit universe declaration for polymorphic operations
 universe u v

@@ -25,7 +25,7 @@ The Vizagrams library is organized into the following core modules:
 
 ### Core Modules
 
-- **[LeannearAlgebra](Vizagrams/LeannearAlgebra.lean)** - Mathematical foundation for 2D geometric operations. Provides vector spaces (`Vec2`), affine transformations (`Mat2Vec2`), and geometric operations following Felix Klein's Erlanger Program.
+- **[LinearAlgebra](Vizagrams/LinearAlgebra.lean)** - Mathematical foundation for 2D geometric operations. Provides vector spaces (`Vec2`), affine transformations (`Mat2Vec2`), and geometric operations following Felix Klein's Erlanger Program.
 
 - **[Geom](Vizagrams/Geom.lean)** - Geometric primitives with two representations:
   - `Geom`: Semantic representation (intuitive for users, e.g., circle defined by center and radius)
